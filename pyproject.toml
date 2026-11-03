@@ -49,3 +49,25 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-include = ["*.ipynb"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "N", "D", "ANN"]
+ignore = ["D104", "D107", "N803", "N806"]  # N803/N806: convenção sklearn (X maiúsculo)
+unfixable = ["F401"]                        # não apagar imports sozinho
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D", "ANN"]
+"*.ipynb" = ["D", "ANN", "E402"]
+"app/*" = ["D"]
+"api/*" = ["B008"]                         # Depends()/Query() em defaults é o padrão do FastAPI
+
+[tool.ruff.lint.isort]
+known-first-party = ["credit_risk", "api"]
