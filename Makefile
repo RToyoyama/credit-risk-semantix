@@ -2,7 +2,7 @@
 PY := .venv/bin/python
 BIN := .venv/bin
 
-.PHONY: help venv install lock lint format test check hooks clean
+.PHONY: help venv install lock data lint format test check hooks clean
 
 help: ## Lista os comandos disponíveis
 	@grep -E '^[a-z_-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
@@ -17,6 +17,9 @@ install: ## Instala as dependências exatas do lock + pacote editável + hooks
 
 lock: ## Regenera o requirements.lock a partir do pyproject.toml
 	uv pip compile pyproject.toml --extra dev --python-version 3.11 --python-platform x86_64-manylinux_2_28 -o requirements.lock
+
+data: ## Baixa os dados da UCI, confere o SHA-256, valida e salva em data/raw/
+	$(PY) -m credit_risk.data
 
 lint: ## Verifica o código com ruff (sem alterar)
 	$(BIN)/ruff check .

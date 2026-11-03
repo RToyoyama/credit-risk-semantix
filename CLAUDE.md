@@ -46,9 +46,9 @@ Você é meu **tutor e par de programação** neste projeto. Leia este arquivo i
 
 Os segmentos de clientes (PCA + K-means) dão o contexto interpretável que atravessa todas essas peças.
 
-**Dados:** *Default of Credit Card Clients* (Yeh & Lien, 2009). 30.000 clientes de Taiwan (abr–set/2005), 23 variáveis, alvo binário `default.payment.next.month` (~22% positivos).
+**Dados:** *Default of Credit Card Clients* (Yeh & Lien, 2009). 30.000 clientes de Taiwan (abr–set/2005), 23 variáveis, alvo binário `default payment next month` na UCI (com espaços; ~22% positivos), renomeado para `default` na limpeza.
 - Fonte oficial: UCI Machine Learning Repository, dataset 350: https://archive.ics.uci.edu/dataset/350/default+of+credit+card+clients (licença CC BY 4.0).
-- **Download direto da UCI, sem Kaggle:** `https://archive.ics.uci.edu/static/public/350/default+of+credit+card+clients.zip` (zip com `default of credit card clients.xls`). Validar o SHA-256 do zip (`56c885f84457f6680f8438f02bfcdac9579323d8a94465ee5f26e32baa727602`, conferido em 2026-11-03). Ler o `.xls` com `xlrd`; a planilha tem **duas linhas de cabeçalho** (`X1..X23` e os nomes reais), usar `header=1`. Motivo: o avaliador roda `make data` sem precisar de conta ou token.
+- **Download direto da UCI, sem Kaggle:** `https://archive.ics.uci.edu/static/public/350/default+of+credit+card+clients.zip` (zip com `default of credit card clients.xls`). Validar o SHA-256 do zip (`56c885f84457f6680f8438f02bfcdac9579323d8a94465ee5f26e32baa727602`, conferido em 2026-11-03). Ler o `.xls` com `engine="calamine"` (`python-calamine`; o `xlrd` está depreciado no pandas 3.1); a planilha tem **duas linhas de cabeçalho** (`X1..X23` e os nomes reais), usar `header=1`. Motivo: o avaliador roda `make data` sem precisar de conta ou token.
 - **Plano B (só documentado no `data_card.md`, fora do código):** espelho no Kaggle `uciml/default-of-credit-card-clients-dataset`, para o caso de o link da UCI sair do ar.
 - Citação: Yeh, I. C., & Lien, C. H. (2009). *The comparisons of data mining techniques for the predictive accuracy of probability of default of credit card clients.* Expert Systems with Applications, 36(2), 2473–2480.
 
@@ -123,7 +123,7 @@ Sempre: `git add -A && pre-commit run --all-files; git add -A` antes do commit (
 ## 3. STACK E PADRÕES
 ═══════════════════════════════════════
 
-- **Python 3.11** (via `uv`), pandas, numpy, scikit-learn, xgboost, imbalanced-learn, scipy, statsmodels, matplotlib, seaborn, plotly, streamlit, joblib, shap, fastapi, uvicorn, pydantic (v2), xlrd (ler o `.xls` da UCI).
+- **Python 3.11** (via `uv`), pandas, numpy, scikit-learn, xgboost, imbalanced-learn, scipy, statsmodels, matplotlib, seaborn, plotly, streamlit, joblib, shap, fastapi, uvicorn, pydantic (v2), python-calamine (ler o `.xls` da UCI; `xlrd` está depreciado no pandas 3.1).
 - Dev: ruff, pytest, pre-commit, ipykernel, httpx (para o `TestClient` do FastAPI).
 - `snake_case`, **type hints obrigatórios**, docstrings no **padrão Google**.
 - Arquitetura de dados em camadas: `raw → interim (limpo) → processed (features)`, mais `reports/` para resultados.

@@ -17,3 +17,10 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | Limiar de decisão | *decision threshold* | o ponto de corte da probabilidade a partir do qual se age. Ex.: "agir se PD ≥ 15%" | 1 |
 | Holdout | *holdout set* | um pedaço dos dados (aqui 20%) guardado "na gaveta" e usado só uma vez, no fim, como prova final | 1 |
 | Acurácia | *accuracy* | a porcentagem de acertos. Engana quando uma classe é rara: dizer "ninguém dá calote" acerta cerca de 78% aqui | 1 |
+| Data card | *data card* | a "bula" de um conjunto de dados: fonte, licença, significado das colunas, limitações | 3 |
+| Schema | *schema* | o formato esperado de uma tabela: quais colunas, de que tipo e com que valores permitidos | 3 |
+| Validação de schema | *schema validation* | conferir, antes de usar, se os dados chegaram no formato esperado, como conferir uma entrega pela nota fiscal | 3 |
+| SHA-256 / hash | *hash* | uma "impressão digital" do arquivo: se um único byte mudar, o código muda totalmente | 3 |
+| Parquet | *Parquet* | formato de arquivo para tabelas, compacto e rápido, que guarda o tipo de cada coluna | 3 |
+| Camada raw | *raw layer* | os dados exatamente como vieram da fonte, sem nenhuma alteração | 3 |
+| Crédito rotativo | *revolving credit* | quando o cliente paga só parte da fatura e o resto vira dívida com juros para o mês seguinte | 3 |

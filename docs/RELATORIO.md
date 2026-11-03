@@ -69,13 +69,39 @@ O sucesso é medido em **dinheiro**, não em acurácia:
 
 *Default of Credit Card Clients*, de Yeh & Lien (2009), disponível no UCI Machine Learning Repository (licença CC BY 4.0): 30.000 clientes de um banco de Taiwan, de abril a setembro de 2005. Detalhes completos na seção **Coleta de dados** (Etapa 3) e em [`data_card.md`](data_card.md).
 
-> TODO (Etapa 3): confirmar com os dados baixados o número de linhas e a taxa de inadimplência.
+Confirmado com os dados baixados: **30.000 clientes, dos quais 6.636 (22,12%) ficaram inadimplentes** no mês seguinte.
 
 ---
 
 ## 2. Coleta de dados
 
-> TODO (Etapas 3–4).
+### 2.1 Fonte e obtenção
+
+Os dados são públicos e não confidenciais: *Default of Credit Card Clients* (Yeh & Lien, 2009), publicados no UCI Machine Learning Repository sob a licença CC BY 4.0. Os clientes são anonimizados. A ficha completa (dicionário, peculiaridades e limitações) está em [`data_card.md`](data_card.md).
+
+A coleta é automatizada e verificável (`make data`):
+
+1. **Download direto da fonte oficial**, sem login, para que qualquer pessoa reproduza o projeto.
+2. **Conferência do SHA-256** (a "impressão digital" do arquivo): se a UCI alterar o arquivo, o processo para.
+3. **Validação do schema** antes de qualquer análise: 25 colunas esperadas, todas inteiras, sem nulos, IDs únicos, categorias e faixas válidas. Valores conhecidos mas não documentados viram **aviso**; qualquer coisa fora disso vira **erro**.
+4. Gravação em Parquet na camada `data/raw/`, que não é versionada no Git.
+
+**Por que não usar o espelho do Kaggle:** ele exige conta e token, o que impediria um avaliador de reproduzir o projeto só com o repositório. Fica documentado como plano B manual.
+
+**Por que não usar ferramentas de big data (Spark, dbt, Airflow):** a base inteira tem 30 mil linhas e cabe em memória; essas ferramentas só aumentariam a complexidade, sem ganho.
+
+### 2.2 O que a validação encontrou
+
+| Verificação | Resultado |
+|---|---|
+| Linhas × colunas | 30.000 × 25 |
+| Nulos / IDs duplicados | 0 / 0 |
+| Inadimplentes | 6.636 (22,12%) |
+| `EDUCATION` fora da documentação (0, 5, 6) | 345 clientes |
+| `MARRIAGE` fora da documentação (0) | 54 clientes |
+| Clientes com fatura negativa em algum mês | 1.930 |
+
+> TODO (Etapa 4): limpeza e separação do holdout.
 
 ## 3. Modelagem
 

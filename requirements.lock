@@ -225,6 +225,8 @@ pyparsing==3.3.3
     # via matplotlib
 pytest==9.2.0
     # via credit-risk (pyproject.toml)
+python-calamine==0.9.1
+    # via credit-risk (pyproject.toml)
 python-dateutil==4.0.0
     # via
     #   jupyter-client
@@ -341,6 +343,4 @@ websockets==17.4
 wrapt==2.5.2
     # via formulaic
 xgboost==3.2.0
-    # via credit-risk (pyproject.toml)
-xlrd==2.0.2
     # via credit-risk (pyproject.toml)
