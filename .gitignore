@@ -1,0 +1,47 @@
+# ── Python ──────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# ── Ambientes virtuais ──────────────────
+.venv/
+venv/
+
+# ── Caches de ferramentas ───────────────
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# ── Dados (gerados por `make data`) ─────
+data/raw/*
+data/interim/*
+data/processed/*
+!data/**/.gitkeep
+
+# ── Modelos treinados ───────────────────
+models/*
+!models/.gitkeep
+
+# ── Artefatos não determinísticos ───────
+reports/*_timings.csv
+reports/**/*_timings.csv
+
+# ── Segredos ────────────────────────────
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# ── Editor / SO ─────────────────────────
+.DS_Store
+Thumbs.db
+*:Zone.Identifier
+.idea/
+
+# ── Exceção geral ───────────────────────
+!**/.gitkeep
