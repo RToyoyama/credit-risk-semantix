@@ -101,7 +101,30 @@ A coleta é automatizada e verificável (`make data`):
 | `MARRIAGE` fora da documentação (0) | 54 clientes |
 | Clientes com fatura negativa em algum mês | 1.930 |
 
-> TODO (Etapa 4): limpeza e separação do holdout.
+### 2.3 Limpeza
+
+A limpeza usa só **regras fixas**, que não aprendem nada com os dados. Por isso pode ser feita antes de separar o holdout sem vazamento de dados. Nenhuma linha é removida.
+
+| Regra | Por quê |
+|---|---|
+| Colunas em `snake_case`; `PAY_0, PAY_2…PAY_6` → `pay_status_1…6` | na fonte, o status de setembro é `PAY_0`, mas a fatura de setembro é `BILL_AMT1`. Depois da renomeação, o índice 1 é setembro em **todas** as séries (status, fatura e pagamento) |
+| Alvo → `default` | nome curto e sem espaços |
+| `education` 0/5/6 → 4 ("outros"); `marriage` 0 → 3 ("outros") | valores sem significado documentado e raros (345 e 54 clientes). "Outros" já existe e é a categoria mais próxima |
+| Flags `education_undocumented` e `marriage_undocumented` | o agrupamento apaga a informação de que o valor era estranho; a flag a preserva, e a EDA testa se ela tem sinal |
+| `n_status_bill_mismatch` (0–6) | conta os meses em que o status contradiz a fatura ("sem consumo" com fatura > 0, ou "em atraso" com fatura ≤ 0) |
+
+**Achado:** 4.594 clientes (15,3%) têm pelo menos um mês contraditório, e 765 têm os 6 meses. É frequente demais para ser erro de digitação. As hipóteses mais prováveis são: (a) o significado de -2 e 0 não é oficial, e a interpretação usual pode estar errada; (b) o status de um mês se refere à fatura de outro mês. Por isso essas linhas **não são removidas**: o contador vira um sinal a ser investigado na EDA (Etapa 5).
+
+### 2.4 Separação do holdout
+
+| Conjunto | Clientes | Inadimplentes | Taxa |
+|---|---|---|---|
+| Treino | 24.000 | 5.309 | 22,12% |
+| Holdout | 6.000 | 1.327 | 22,12% |
+
+- **20%, estratificado pelo alvo, seed 42**: a taxa de inadimplência ficou idêntica nos dois lados.
+- **Holdout lacrado:** os 6.000 IDs ficam em [`reports/holdout_ids.csv`](../reports/holdout_ids.csv), versionado no Git. Essa lista é a fonte de verdade: rodar `make split` de novo **lê** a lista em vez de sortear outra vez, então o holdout não muda nem com uma versão futura do scikit-learn.
+- O holdout só é usado **uma vez**, na Etapa 13. Por isso, de propósito, o pacote só oferece uma função para carregar o treino (`load_train`); não existe um atalho para carregar o holdout.
 
 ## 3. Modelagem
 

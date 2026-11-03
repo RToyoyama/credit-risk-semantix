@@ -24,3 +24,8 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | Parquet | *Parquet* | formato de arquivo para tabelas, compacto e rápido, que guarda o tipo de cada coluna | 3 |
 | Camada raw | *raw layer* | os dados exatamente como vieram da fonte, sem nenhuma alteração | 3 |
 | Crédito rotativo | *revolving credit* | quando o cliente paga só parte da fatura e o resto vira dívida com juros para o mês seguinte | 3 |
+| Vazamento de dados | *data leakage* | quando o modelo, sem querer, usa uma informação que não teria no mundo real, como "colar na prova". Resultado: nota ótima no teste e fracasso na prática | 4 |
+| Estratificação | *stratified split* | separar os dados mantendo a mesma proporção de cada classe dos dois lados (aqui, 22,12% de inadimplentes no treino e no holdout) | 4 |
+| Seed (semente) | *random seed* | número que fixa o "sorteio" do computador, para que ele saia igual toda vez | 4 |
+| Flag | *flag / indicator* | coluna 0/1 que marca um caso especial (ex.: "o valor original não era documentado") | 4 |
+| Camada interim | *interim layer* | os dados já limpos, mas ainda sem features novas | 4 |

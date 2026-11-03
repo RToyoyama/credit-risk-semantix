@@ -1,6 +1,5 @@
 import hashlib
 
-import pandas as pd
 import pytest
 
 from credit_risk import config
@@ -11,26 +10,6 @@ from credit_risk.data import (
     sha256sum,
     validate_raw,
 )
-
-
-@pytest.fixture
-def raw_df() -> pd.DataFrame:
-    """Tabela sintética pequena, válida segundo o schema da UCI."""
-    n = 4
-    data = {
-        "ID": [1, 2, 3, 4],
-        "LIMIT_BAL": [20_000, 50_000, 120_000, 500_000],
-        "SEX": [1, 2, 2, 1],
-        "EDUCATION": [1, 2, 3, 4],
-        "MARRIAGE": [1, 2, 3, 1],
-        "AGE": [21, 35, 47, 79],
-        **{c: [-2, -1, 0, 2] for c in config.PAY_STATUS_COLS},
-        **{c: [-500, 0, 3_000, 90_000] for c in config.BILL_AMT_COLS},
-        **{c: [0, 100, 2_000, 5_000] for c in config.PAY_AMT_COLS},
-        config.RAW_TARGET: [0, 0, 1, 1],
-    }
-    assert all(len(v) == n for v in data.values())
-    return pd.DataFrame(data)[config.RAW_COLUMNS]
 
 
 def test_valid_data_has_no_errors_or_warnings(raw_df):

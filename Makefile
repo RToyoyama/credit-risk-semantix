@@ -2,7 +2,7 @@
 PY := .venv/bin/python
 BIN := .venv/bin
 
-.PHONY: help venv install lock data lint format test check hooks clean
+.PHONY: help venv install lock data split lint format test check hooks clean
 
 help: ## Lista os comandos disponíveis
 	@grep -E '^[a-z_-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
@@ -20,6 +20,10 @@ lock: ## Regenera o requirements.lock a partir do pyproject.toml
 
 data: ## Baixa os dados da UCI, confere o SHA-256, valida e salva em data/raw/
 	$(PY) -m credit_risk.data
+
+split: ## Limpa os dados (interim) e separa treino/holdout (processed)
+	$(PY) -m credit_risk.cleaning
+	$(PY) -m credit_risk.split
 
 lint: ## Verifica o código com ruff (sem alterar)
 	$(BIN)/ruff check .

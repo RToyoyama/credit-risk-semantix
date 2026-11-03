@@ -62,3 +62,37 @@ VALID_RANGES: dict[str, tuple[float | None, float | None]] = {
     **dict.fromkeys(PAY_STATUS_COLS, (-2, 9)),
     **dict.fromkeys(PAY_AMT_COLS, (0, None)),
 }
+
+# ── Camadas interim/processed ───────────────────────────────
+INTERIM_PARQUET = INTERIM_DIR / "credit_default_clean.parquet"
+TRAIN_PARQUET = PROCESSED_DIR / "train.parquet"
+HOLDOUT_PARQUET = PROCESSED_DIR / "holdout.parquet"
+HOLDOUT_IDS = REPORTS_DIR / "holdout_ids.csv"  # versionado: define o holdout para sempre
+HOLDOUT_SIZE = 0.20
+
+# ── Schema limpo (snake_case; índice 1 = set/2005, o mês mais recente) ──
+N_MONTHS = 6
+TARGET = "default"
+PAY_STATUS = [f"pay_status_{i}" for i in range(1, N_MONTHS + 1)]
+BILL_AMT = [f"bill_amt_{i}" for i in range(1, N_MONTHS + 1)]
+PAY_AMT = [f"pay_amt_{i}" for i in range(1, N_MONTHS + 1)]
+RENAME_MAP: dict[str, str] = {
+    ID_COL: "id",
+    "LIMIT_BAL": "limit_bal",
+    "SEX": "sex",
+    "EDUCATION": "education",
+    "MARRIAGE": "marriage",
+    "AGE": "age",
+    **dict(zip(PAY_STATUS_COLS, PAY_STATUS, strict=True)),
+    **dict(zip(BILL_AMT_COLS, BILL_AMT, strict=True)),
+    **dict(zip(PAY_AMT_COLS, PAY_AMT, strict=True)),
+    RAW_TARGET: TARGET,
+}
+# Valores não documentados → categoria "outros" já existente.
+EDUCATION_OTHERS = 4
+MARRIAGE_OTHERS = 3
+CATEGORY_LABELS: dict[str, dict[int, str]] = {
+    "sex": {1: "masculino", 2: "feminino"},
+    "education": {1: "pós-graduação", 2: "universidade", 3: "ensino médio", 4: "outros"},
+    "marriage": {1: "casado", 2: "solteiro", 3: "outros"},
+}
