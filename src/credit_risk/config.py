@@ -96,3 +96,10 @@ CATEGORY_LABELS: dict[str, dict[int, str]] = {
     "education": {1: "pós-graduação", 2: "universidade", 3: "ensino médio", 4: "outros"},
     "marriage": {1: "casado", 2: "solteiro", 3: "outros"},
 }
+
+# ── Inferência estatística (critérios fixados antes da EDA) ──
+ALPHA = 0.05
+N_BOOT = 10_000
+CI_LEVEL = 0.95
+# Cohen: abaixo de 0,10 desprezível; 0,10 pequeno; 0,30 médio; 0,50 grande.
+EFFECT_THRESHOLDS: dict[str, float] = {"pequeno": 0.10, "médio": 0.30, "grande": 0.50}
