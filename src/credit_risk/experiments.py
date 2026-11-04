@@ -8,19 +8,16 @@ Uso: ``python -m credit_risk.experiments`` (ou ``make experiments``).
 """
 
 import logging
-from collections.abc import Callable
 
 import pandas as pd
 from sklearn.base import BaseEstimator
-from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
 from xgboost import XGBClassifier
 
 from credit_risk import config
 from credit_risk.evaluate import cv_scores, paired_comparison
-from credit_risk.features import build_features
+from credit_risk.preprocessing import make_feature_pipeline
 from credit_risk.split import load_train
 
 logger = logging.getLogger(__name__)
@@ -48,42 +45,49 @@ def reference_models() -> dict[str, BaseEstimator]:
     }
 
 
-def _simple_preprocessor(numeric: list[str]) -> ColumnTransformer:
-    """Escala nos numéricos e one-hot nas categorias (versão mínima da Etapa 8)."""
-    return ColumnTransformer(
-        [
-            ("num", StandardScaler(), numeric),
-            ("cat", OneHotEncoder(handle_unknown="ignore"), config.CATEGORICAL_COLS),
-        ]
-    )
-
-
-def _select(columns: list[str]) -> Callable[[pd.DataFrame], pd.DataFrame]:
-    def pick(df: pd.DataFrame) -> pd.DataFrame:
-        return build_features(df)[columns]
-
-    return pick
-
-
-def feature_set_pipeline(model: BaseEstimator, with_engineered: bool) -> Pipeline:
-    """Pipeline com as colunas originais, com ou sem as features de resumo.
+def model_pipeline(
+    model: BaseEstimator,
+    scaled: bool = True,
+    engineered: bool = True,
+    status_as_category: bool = False,
+) -> Pipeline:
+    """Pipeline completo: features + pré-processamento oficial + modelo.
 
     Args:
         model: Classificador.
-        with_engineered: Inclui ``config.ENGINEERED_FEATURES``.
+        scaled: Padroniza os números.
+        engineered: Inclui as features de resumo.
+        status_as_category: Trata ``pay_status_*`` como categoria.
 
     Returns:
-        Pipeline completo.
+        Pipeline não ajustado.
     """
-    numeric = config.RAW_NUMERIC_COLS + (config.ENGINEERED_FEATURES if with_engineered else [])
-    columns = config.CATEGORICAL_COLS + numeric
     return Pipeline(
         [
-            ("features", FunctionTransformer(_select(columns))),
-            ("prep", _simple_preprocessor(numeric)),
+            ("prep", make_feature_pipeline(scaled, engineered, status_as_category)),
             ("model", model),
         ]
     )
+
+
+def _compare(variants: dict[str, tuple[dict, dict]], name: str) -> pd.DataFrame:
+    """Roda pares (base, candidato) de configurações e salva a comparação."""
+    df = load_train()
+    X, y = df.drop(columns=[config.TARGET]), df[config.TARGET]
+    models = reference_models()
+    rows = []
+    for model_name, (base_kw, cand_kw) in variants.items():
+        model = models[model_name]
+        base = cv_scores(model_pipeline(model, **base_kw), X, y)
+        cand = cv_scores(model_pipeline(model, **cand_kw), X, y)
+        for metric in METRICS:
+            rows.append(
+                {"modelo": model_name, "métrica": metric, **paired_comparison(base, cand, metric)}
+            )
+        logger.info("%s: %s concluído", name, model_name)
+    out = decide(pd.DataFrame(rows))
+    out.to_csv(config.REPORTS_DIR / f"{name}.csv", index=False)
+    return out
 
 
 def decide(results: pd.DataFrame) -> pd.DataFrame:
@@ -103,27 +107,43 @@ def decide(results: pd.DataFrame) -> pd.DataFrame:
 
 
 def feature_experiment() -> pd.DataFrame:
-    """Colunas originais × originais + features de resumo, nos mesmos folds.
+    """Etapa 7: colunas originais × originais + features de resumo.
 
     Returns:
-        Tabela de comparação pareada por modelo e métrica (salva em ``reports/``).
+        Comparação pareada por modelo e métrica (salva em ``reports/``).
     """
-    df = load_train()
-    X, y = df.drop(columns=[config.TARGET]), df[config.TARGET]
-    rows = []
-    for name, model in reference_models().items():
-        base = cv_scores(feature_set_pipeline(model, with_engineered=False), X, y)
-        cand = cv_scores(feature_set_pipeline(model, with_engineered=True), X, y)
-        for metric in METRICS:
-            rows.append(
-                {"modelo": name, "métrica": metric, **paired_comparison(base, cand, metric)}
-            )
-        logger.info("Experimento de features: %s concluído", name)
-    out = decide(pd.DataFrame(rows))
-    out.to_csv(config.REPORTS_DIR / "feature_experiment.csv", index=False)
-    return out
+    return _compare(
+        {
+            "logística": ({"engineered": False}, {"engineered": True}),
+            "xgboost": ({"scaled": False, "engineered": False}, {"scaled": False}),
+        },
+        "feature_experiment",
+    )
+
+
+def status_category_experiment() -> pd.DataFrame:
+    """Etapa 8: ``pay_status`` como número × como categoria, na logística.
+
+    Árvores ficam de fora: elas cortam em qualquer ponto, então tratar o
+    status como número não as engana.
+
+    Returns:
+        Comparação pareada (salva em ``reports/``).
+    """
+    return _compare(
+        {"logística": ({}, {"status_as_category": True})},
+        "status_category_experiment",
+    )
+
+
+EXPERIMENTS = {
+    "feature_experiment": feature_experiment,
+    "status_category_experiment": status_category_experiment,
+}
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
-    print(feature_experiment().round(4).to_string(index=False))
+    for exp_name, run in EXPERIMENTS.items():
+        print(f"\n== {exp_name} ==")
+        print(run().round(4).to_string(index=False))

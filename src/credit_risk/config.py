@@ -147,3 +147,7 @@ ENGINEERED_FEATURES = [
     "delay_trend",
     "revolving_months",
 ]
+MIN_CATEGORY_COUNT = 50  # categorias com menos casos no treino viram "infrequente"
+# Etapa 8: pay_status como categoria nos modelos lineares (PR AUC +0,016, win rate 100%).
+# Árvores mantêm o número: cortam em qualquer ponto, então a escala não as engana.
+STATUS_AS_CATEGORY_LINEAR = True

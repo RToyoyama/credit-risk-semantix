@@ -3,7 +3,7 @@ import pytest
 from sklearn.dummy import DummyClassifier
 
 from credit_risk import config
-from credit_risk.experiments import decide, feature_set_pipeline
+from credit_risk.experiments import decide, model_pipeline
 
 
 def test_decide_requires_pr_auc_gain_and_win_rate():
@@ -18,13 +18,11 @@ def test_decide_requires_pr_auc_gain_and_win_rate():
 
 
 @pytest.mark.parametrize("engineered", [False, True])
-def test_feature_set_pipeline_columns(raw_df, engineered):
+def test_model_pipeline_columns(raw_df, engineered):
     from credit_risk.cleaning import clean
 
-    df = clean(raw_df)
-    pipe = feature_set_pipeline(DummyClassifier(), engineered).fit(df, df[config.TARGET])
-    n_num = len(config.RAW_NUMERIC_COLS) + (len(config.ENGINEERED_FEATURES) if engineered else 0)
-    assert (
-        pipe.named_steps["prep"].transformers_[0][2] == pipe.named_steps["prep"].transformers[0][2]
-    )
-    assert len(pipe.named_steps["prep"].transformers_[0][2]) == n_num
+    df = clean(pd.concat([raw_df] * 60, ignore_index=True))
+    pipe = model_pipeline(DummyClassifier(), engineered=engineered).fit(df, df[config.TARGET])
+    names = pipe.named_steps["prep"].named_steps["prep"].get_feature_names_out()
+    assert ("util_mean" in names) is engineered
+    assert "limit_bal" in names

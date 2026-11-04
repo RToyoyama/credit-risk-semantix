@@ -215,11 +215,32 @@ As colunas originais dizem "fatura de NT$ 50 mil" ou "status 2 em setembro". As 
 | Modelo | PR AUC original → com features | Ganho médio | Win rate | Decisão |
 |---|---|---|---|---|
 | Regressão logística | 0,5069 → **0,5314** | +0,024 | **100%** | adotar |
-| XGBoost | 0,5589 → **0,5624** | +0,004 | 73% | adotar |
+| XGBoost | 0,5589 → **0,5626** | +0,004 | 87% | adotar |
 
 O ganho é grande na logística e pequeno no XGBoost, como esperado: um modelo linear não consegue criar "máximo de atraso" ou "meses em atraso" sozinho, enquanto as árvores conseguem aproximar parte dessas combinações. **As features de resumo entram no conjunto oficial** (`build_features`).
 
-> TODO (Etapas 8–17).
+*Números atualizados na Etapa 8, quando o experimento passou a usar o pré-processador oficial (XGBoost sem escala e categorias raras agrupadas); a decisão não mudou.*
+
+### 3.4 Pré-processamento (Etapa 8)
+
+Cada modelo "lê" os dados de um jeito, e o pré-processamento faz a tradução (`preprocessing.py`). Tudo o que ele aprende (médias, desvios, lista de categorias) fica **dentro do pipeline**, reajustado só com o treino de cada fold.
+
+| Escolha | Motivo |
+|---|---|
+| Escala (padronização) **só para modelos lineares** | árvores só perguntam "é maior que X?", e a resposta não muda com a escala |
+| One-hot com `handle_unknown="infrequent_if_exist"` | uma categoria nunca vista em produção não quebra o modelo |
+| Categorias com menos de **50** casos no treino viram "infrequente" | `pay_status` 5 a 8 tem de 9 a 18 clientes; uma coluna própria para eles seria ruído |
+| Saída em **pandas**, com nomes de coluna estáveis | permite interpretar o modelo e gerar os motivos da decisão (Etapa 15) |
+
+**Experimento:** `pay_status` como número × como categoria na regressão logística (critério: PR AUC + win rate > 60%).
+
+| PR AUC (número → categoria) | Ganho médio | Win rate | Decisão |
+|---|---|---|---|
+| 0,5314 → **0,5476** | +0,016 | **100%** | adotar nos modelos lineares |
+
+A EDA já tinha mostrado que, na escala do `pay_status`, ir de -2 para -1 não é "um mês a mais de atraso". Como categoria, cada situação ganha um peso próprio. Nas árvores o status continua numérico.
+
+> TODO (Etapas 9–17).
 
 ## 4. Conclusões
 

@@ -95,7 +95,7 @@ Detalhes: notebooks de [EDA](notebooks/01_eda_inferencia.ipynb) e de [segmentaç
 | **Critérios definidos antes dos experimentos** | evita ajustar a régua depois de ver o resultado |
 | **Dados verificados na entrada:** download direto da fonte oficial, com conferência da "impressão digital" do arquivo (SHA-256) e validação de colunas, tipos e faixas | se a fonte mudar, o processo para em vez de seguir com dados diferentes |
 | **Uma única fonte de verdade para as regras de negócio** | API, dashboard e avaliação usam o mesmo código de scoring (a partir da Etapa 14) |
-| **Testes automatizados** e verificação de código a cada commit | hoje: 90 testes |
+| **Testes automatizados** e verificação de código a cada commit | hoje: 98 testes |
 
 **Decisão consciente:** a base tem 30 mil linhas e cabe na memória de qualquer computador. Por isso o projeto usa pandas e scikit-learn, e não ferramentas de big data (Spark, dbt, Airflow), que só aumentariam a complexidade sem nenhum ganho.
 
@@ -112,7 +112,7 @@ Detalhes: notebooks de [EDA](notebooks/01_eda_inferencia.ipynb) e de [segmentaç
 | 5 | Análise exploratória com inferência estatística | ✅ |
 | 6 | Segmentação de clientes (PCA + K-means) | ✅ |
 | 7 | Criação de variáveis | ✅ |
-| 8 | Pré-processamento | ⏳ |
+| 8 | Pré-processamento | ✅ |
 | 9–11 | Comparação de modelos, balanceamento, ajuste e combinação | ⏳ |
 | 12 | Calibração e política de decisão por custo | ⏳ |
 | 13 | Avaliação final na prova lacrada | ⏳ |
@@ -158,7 +158,7 @@ credit-risk-semantix/
 │   ├── figures/           # gráficos gerados
 │   ├── eda_tests.csv      # resultado de todos os testes estatísticos
 │   ├── segment_*.csv      # escolha de k, perfis e experimento dos segmentos
-│   ├── feature_experiment.csv  # experimento das variáveis de resumo
+│   ├── *_experiment.csv   # resultados dos experimentos pareados
 │   └── holdout_ids.csv    # IDs da prova final lacrada
 ├── src/credit_risk/
 │   ├── config.py          # caminhos, seeds, schema e critérios
@@ -168,6 +168,7 @@ credit-risk-semantix/
 │   ├── stats.py           # intervalos de confiança, testes e tamanhos de efeito
 │   ├── features.py        # features comportamentais e de resumo (regras fixas)
 │   ├── segmentation.py    # PCA + K-means e perfil dos segmentos
+│   ├── preprocessing.py   # escala e one-hot dentro do pipeline
 │   ├── evaluate.py        # validação cruzada e comparação pareada
 │   ├── experiments.py     # experimentos pareados (resultados em reports/)
 │   └── viz.py             # estilo padrão dos gráficos

@@ -67,3 +67,9 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | Tendência | *trend* | diferença entre o comportamento recente e o antigo. Positiva = o valor está subindo | 7 |
 | Volatilidade | *volatility* | o quanto um valor oscila de um mês para o outro (aqui, o desvio-padrão da utilização) | 7 |
 | Escala logarítmica | *log transform* | trocar o valor pelo seu logaritmo, o que "aproxima" números muito grandes. De 10 mil para 1 milhão há 100×, mas no log a distância fica parecida com a de 100 para 10 mil | 7 |
+| Pré-processamento | *preprocessing* | preparar as colunas para o modelo: pôr números na mesma régua, transformar categorias em colunas 0/1 etc. | 8 |
+| Pipeline | *pipeline* | uma "linha de montagem": passos de preparação e o modelo encadeados, que são ajustados e aplicados sempre juntos e na mesma ordem | 8 |
+| ColumnTransformer | *ColumnTransformer* | um "despachante" que manda cada grupo de colunas para a sua transformação e junta tudo no final | 8 |
+| One-hot | *one-hot encoding* | transformar uma categoria em colunas 0/1. "Escolaridade = universidade" vira `education_2 = 1` e as demais 0 | 8 |
+| Categoria infrequente | *infrequent category* | categoria rara demais no treino (aqui, < 50 casos), agrupada numa coluna única para não virar ruído | 8 |
+| Clonagem | *cloning* | copiar um pipeline **sem** o que ele aprendeu, como a validação cruzada faz a cada fold para não vazar informação | 8 |
