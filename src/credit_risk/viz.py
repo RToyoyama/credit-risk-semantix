@@ -21,6 +21,8 @@ GRID = "#e4e3df"
 CONTEXT = "#b9b8b2"
 HIGHLIGHT = "#2a78d6"
 ALERT = "#e34948"
+# Ordem categórica fixa (nunca reciclada): azul, laranja, verde-água.
+CATEGORICAL = ["#2a78d6", "#eb6834", "#1baf7a"]
 
 
 def pct(value: float, decimals: int = 1) -> str:

@@ -166,7 +166,32 @@ Notebook: [`02_segmentacao.ipynb`](../notebooks/02_segmentacao.ipynb). Os grupos
 
 O PC4 separa o atraso recente do antigo sem nunca ter visto o alvo, o que reforça o achado da EDA de que o atraso recente é o sinal mais forte.
 
-> TODO (Etapa 6, Parte B — K-means; Etapas 7–17).
+**Parte B — K-means.** Critérios fixados antes: k entre 3 e 8 com a melhor silhueta, desde que todo grupo tenha ≥ 5% dos clientes; estabilidade com ARI ≥ 0,8.
+
+- **k = 3** (silhueta 0,52). O cotovelo da inércia apontaria para 4. A partir de k = 6 surge um grupo com 0,5% dos clientes (a cauda de atraso extremo), descartado pela regra de tamanho mínimo.
+- **Estabilidade:** ARI ≥ 0,999 entre sementes e ≥ 0,994 em subamostras de 80%.
+- Os rótulos do K-means são arbitrários; o `SegmentEncoder` renomeia os grupos por regra (o de maior atraso por último; os demais pela utilização), para que códigos e nomes sejam estáveis.
+
+| Segmento | Clientes | Utilização (set) | Paga da fatura | Meses com atraso (de 6) | Limite mediano | Default (descritivo) |
+|---|---|---|---|---|---|---|
+| **Quitadores** | 10.345 (43%) | 9% | 83% (52% quitam todo mês) | 0,4 | NT$ 200 mil | 16,7% |
+| **Rotativo em dia** | 11.330 (47%) | 69% (era 50% em abril) | 10% | 0,4 | NT$ 100 mil | 18,8% |
+| **Atraso crônico** | 2.325 (10%) | 61% | 7% | 4,9 | NT$ 60 mil | **62,4%** |
+
+![Default por segmento](../reports/figures/seg_07_default_segmentos.png)
+
+**Achado:** viver no rotativo quase não aumenta o risco **enquanto não há atraso** (18,8% × 16,7%). O atraso crônico reúne 10% dos clientes e 27% dos defaults. Para o negócio, o "rotativo em dia" é o grupo que paga juros e tem risco parecido com o dos quitadores; uma política que tratasse o rotativo como risco cortaria receita sem reduzir perda.
+
+**Experimento: o segmento como variável do modelo.** Critério fixado: adotar só se o PR AUC subir com win rate > 60% (validação cruzada 5 × 3, mesmos folds, segmentação reajustada dentro de cada fold).
+
+| Modelo | PR AUC sem → com segmento | Ganho médio | Win rate |
+|---|---|---|---|
+| Regressão logística | 0,5248 → 0,5246 | −0,0003 | 27% |
+| XGBoost | 0,5550 → 0,5551 | +0,0001 (desvio 0,0035) | 47% |
+
+**Resultado negativo:** o segmento **não entra no modelo**. Ele é um resumo grosseiro (3 categorias) das mesmas informações que o modelo já recebe. Fica com o papel de **explicar a carteira** (dashboard, política e desempenho por grupo).
+
+> TODO (Etapas 7–17).
 
 ## 4. Conclusões
 

@@ -51,3 +51,14 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | Autovetor e autovalor | *eigenvector / eigenvalue* | na álgebra linear do PCA: o autovetor é a direção do componente, e o autovalor diz quanta variância ele carrega | 6 |
 | Regra de Kaiser | *Kaiser criterion* | manter só componentes com autovalor > 1, ou seja, que "valem" mais que uma coluna original sozinha | 6 |
 | Carga | *loading* | o peso de cada coluna original num componente. Positiva: andam juntos; negativa: andam em sentidos opostos | 6 |
+| K-means | *k-means clustering* | algoritmo que escolhe k centros e coloca cada cliente no grupo do centro mais próximo, repetindo até estabilizar | 6 |
+| Centroide | *centroid* | o "centro" de um grupo: a média dos clientes que pertencem a ele | 6 |
+| Inércia | *inertia* | soma das distâncias (ao quadrado) de cada cliente até o centro do seu grupo. Sempre cai quando se aumenta o número de grupos | 6 |
+| Método do cotovelo | *elbow method* | escolher k no ponto em que acrescentar mais um grupo passa a reduzir pouco a inércia | 6 |
+| Silhueta | *silhouette score* | de -1 a 1: compara a distância de um cliente até o próprio grupo com a distância até o grupo vizinho. Perto de 1 = grupos bem separados | 6 |
+| ARI | *Adjusted Rand Index* | nota de 0 a 1 de quão iguais são duas divisões dos mesmos clientes em grupos (1 = idênticas; 0 = como um sorteio) | 6 |
+| Validação cruzada | *cross-validation* | dividir o treino em partes, treinar em algumas e testar na que ficou de fora, repetindo para cada parte. Dá uma nota mais confiável que um único teste | 6 |
+| Fold | *fold* | cada uma das partes da validação cruzada. Aqui: 5 partes × 3 repetições = 15 rodadas | 6 |
+| Comparação pareada | *paired comparison* | comparar duas versões de um modelo **nos mesmos folds**, para que a diferença venha da mudança e não da sorte da divisão | 6 |
+| Win rate | *win rate* | em quantos folds a versão nova venceu a antiga. Win rate de 60% = venceu em 9 de 15 | 6 |
+| PR AUC | *precision-recall AUC / average precision* | mede o quanto o modelo acha os inadimplentes sem acusar bons pagadores. Um chute tem PR AUC igual à taxa de default (0,22) | 6 |

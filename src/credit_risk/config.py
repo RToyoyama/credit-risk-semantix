@@ -114,3 +114,16 @@ BEHAVIOR_FEATURES = UTILIZATION + PAYMENT_RATIO + DELAY
 
 # ── Segmentação ─────────────────────────────────────────────
 PCA_VARIANCE_TARGET = 0.80  # menor nº de componentes que explique >= 80%
+PCA_N_COMPONENTS = 4  # resultado do critério acima (82,3%, Etapa 6)
+K_RANGE = range(3, 9)
+MIN_SEGMENT_SHARE = 0.05
+ARI_MIN = 0.80
+SILHOUETTE_SAMPLE = 8_000  # silhueta é O(n²): calculada numa amostra fixa
+N_SEGMENTS = 3  # melhor silhueta com todo grupo >= 5% (Etapa 6)
+SEGMENT_NAMES: dict[int, str] = {0: "quitadores", 1: "rotativo em dia", 2: "atraso crônico"}
+KMEANS_N_INIT = 10
+
+# ── Validação cruzada ───────────────────────────────────────
+CV_SPLITS = 5
+CV_REPEATS = 3
+WIN_RATE_MIN = 0.60  # para adotar uma mudança: PR AUC sobe com win rate > 60%
