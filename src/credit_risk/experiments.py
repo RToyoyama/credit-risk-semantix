@@ -11,12 +11,11 @@ import logging
 
 import pandas as pd
 from sklearn.base import BaseEstimator
-from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
-from xgboost import XGBClassifier
 
 from credit_risk import config
-from credit_risk.evaluate import cv_scores, paired_comparison
+from credit_risk.evaluate import cv_scores, paired_comparison, summarize
+from credit_risk.models import CATALOG, build_pipeline
 from credit_risk.preprocessing import make_feature_pipeline
 from credit_risk.split import load_train
 
@@ -26,23 +25,12 @@ METRICS = ["pr_auc", "roc_auc", "brier"]
 
 
 def reference_models() -> dict[str, BaseEstimator]:
-    """Modelos de referência para os experimentos (sem tuning).
+    """Modelos de referência dos experimentos de features (do catálogo, sem tuning).
 
     Returns:
-        Regressão logística e XGBoost com hiperparâmetros fixos e razoáveis.
+        Regressão logística e XGBoost.
     """
-    return {
-        "logística": LogisticRegression(max_iter=2_000),
-        "xgboost": XGBClassifier(
-            n_estimators=300,
-            learning_rate=0.05,
-            max_depth=4,
-            subsample=0.8,
-            colsample_bytree=0.8,
-            random_state=config.SEED,
-            n_jobs=1,
-        ),
-    }
+    return {"logística": CATALOG["logistic"].factory(), "xgboost": CATALOG["xgboost"].factory()}
 
 
 def model_pipeline(
@@ -136,14 +124,44 @@ def status_category_experiment() -> pd.DataFrame:
     )
 
 
+def model_duel() -> pd.DataFrame:
+    """Etapa 9: os quatro modelos (e a referência) nos mesmos 15 folds.
+
+    Salva as métricas de cada fold (``model_duel_folds.csv``) e o resumo com a
+    comparação pareada contra o líder em PR AUC (``model_duel_summary.csv``).
+
+    Returns:
+        Resumo ordenado por PR AUC.
+    """
+    df = load_train()
+    X, y = df.drop(columns=[config.TARGET]), df[config.TARGET]
+    folds = {}
+    for name in CATALOG:
+        folds[name] = cv_scores(build_pipeline(name), X, y)
+        logger.info("Duelo: %s concluído", name)
+    long = pd.concat(
+        [s.assign(modelo=n, fold=range(len(s))) for n, s in folds.items()], ignore_index=True
+    )
+    long.to_csv(config.REPORTS_DIR / "model_duel_folds.csv", index=False)
+    leader = max((n for n in folds if n != "dummy"), key=lambda n: folds[n]["pr_auc"].mean())
+    summary = summarize(folds, reference=leader)
+    summary.insert(1, "nome", summary["modelo"].map(lambda n: CATALOG[n].label))
+    summary.to_csv(config.REPORTS_DIR / "model_duel_summary.csv", index=False)
+    return summary
+
+
 EXPERIMENTS = {
     "feature_experiment": feature_experiment,
     "status_category_experiment": status_category_experiment,
+    "model_duel": model_duel,
 }
 
 
 if __name__ == "__main__":
+    import sys
+
     logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
-    for exp_name, run in EXPERIMENTS.items():
+    chosen = sys.argv[1:] or list(EXPERIMENTS)
+    for exp_name, run in ((n, EXPERIMENTS[n]) for n in chosen):
         print(f"\n== {exp_name} ==")
         print(run().round(4).to_string(index=False))

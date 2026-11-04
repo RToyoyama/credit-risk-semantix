@@ -73,3 +73,16 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | One-hot | *one-hot encoding* | transformar uma categoria em colunas 0/1. "Escolaridade = universidade" vira `education_2 = 1` e as demais 0 | 8 |
 | Categoria infrequente | *infrequent category* | categoria rara demais no treino (aqui, < 50 casos), agrupada numa coluna única para não virar ruído | 8 |
 | Clonagem | *cloning* | copiar um pipeline **sem** o que ele aprendeu, como a validação cruzada faz a cada fold para não vazar informação | 8 |
+| Regressão logística | *logistic regression* | modelo que soma as variáveis com pesos e converte o resultado numa probabilidade entre 0 e 1 | 9 |
+| Árvore de Decisão | *decision tree* | modelo que faz uma sequência de perguntas sim/não ("atrasou 2 meses?") até chegar a uma resposta | 9 |
+| Random Forest | *random forest* | centenas de árvores, cada uma treinada numa amostra diferente dos dados; a resposta é a média delas | 9 |
+| XGBoost | *extreme gradient boosting* | árvores construídas em sequência, cada uma corrigindo os erros das anteriores | 9 |
+| Hiperparâmetro | *hyperparameter* | uma configuração do modelo escolhida antes do treino (ex.: profundidade máxima da árvore), e não aprendida dos dados | 9 |
+| ROC AUC | *area under the ROC curve* | a chance de o modelo dar risco maior a um inadimplente do que a um bom pagador, sorteando um de cada. 0,5 = chute; 1 = perfeito | 9 |
+| KS | *Kolmogorov-Smirnov statistic* | a maior distância entre a fração de maus e a de bons pagadores acumulada ao longo do score. Métrica padrão do mercado de crédito | 9 |
+| Brier score | *Brier score* | erro médio ao quadrado entre a probabilidade prevista e o que aconteceu (0 ou 1). Mede se as probabilidades são confiáveis; menor é melhor | 9 |
+| Razão de chances | *odds ratio* | o número pelo qual a chance de calote é multiplicada quando uma variável aumenta 1 unidade, mantidas as outras. 2 = dobra; 0,5 = cai pela metade | 9 |
+| Multicolinearidade | *multicollinearity* | quando variáveis carregam quase a mesma informação; o modelo divide o peso entre elas de forma arbitrária e os coeficientes perdem o sentido individual | 9 |
+| VIF | *variance inflation factor* | mede a multicolinearidade: 1 ÷ (1 − R²), em que R² é o quanto as outras variáveis explicam aquela. Acima de 5 é alerta | 9 |
+| Pseudo-R² | *pseudo R-squared (McFadden)* | o quanto o modelo melhora em relação a não saber nada, numa escala de 0 a 1. Em crédito, 0,1 a 0,3 é comum | 9 |
+| Confusão | *confounding* | quando o efeito de uma variável é, na verdade, o efeito de outra que anda junto com ela (ex.: pagar pouco "parecia" arriscado, mas era o atraso) | 9 |

@@ -240,7 +240,36 @@ Cada modelo "lê" os dados de um jeito, e o pré-processamento faz a tradução 
 
 A EDA já tinha mostrado que, na escala do `pay_status`, ir de -2 para -1 não é "um mês a mais de atraso". Como categoria, cada situação ganha um peso próprio. Nas árvores o status continua numérico.
 
-> TODO (Etapas 9–17).
+### 3.5 Duelo de modelos (Etapa 9)
+
+Notebook: [`03_modelagem_e_decisao.ipynb`](../notebooks/03_modelagem_e_decisao.ipynb). Quatro modelos, sem tuning, nas **mesmas 15 rodadas** de validação cruzada (5 folds × 3 repetições), cada um com o pré-processamento adequado (`models.py`). Critérios fixados antes: líder = maior PR AUC; empatado = vence o líder em ≥ 40% das rodadas.
+
+| Modelo | PR AUC | ROC AUC | KS | Brier | Acurácia | Win rate vs XGBoost |
+|---|---|---|---|---|---|---|
+| **XGBoost** | **0,5626** | 0,7871 | 0,440 | 0,1333 | 82,1% | — |
+| **Random Forest** | 0,5623 | **0,7879** | **0,440** | **0,1332** | 82,2% | 53% (empate) |
+| Regressão logística | 0,5476 | 0,7756 | 0,427 | 0,1351 | **82,2%** | 0% |
+| Árvore de Decisão | 0,5256 | 0,7723 | 0,420 | 0,1369 | 81,8% | 0% |
+| Referência ("ninguém dá calote") | 0,2212 | 0,5000 | 0,000 | 0,1723 | 77,9% | 0% |
+
+![Duelo de modelos](../reports/figures/model_01_duelo_pr_auc.png)
+
+- **XGBoost e Random Forest empatam** e seguem para o tuning (Etapa 11). A hipótese registrada antes (XGBoost ≈ RF > logística > árvore) se confirma.
+- **A acurácia engana:** varia menos de 0,5 p.p. entre os quatro modelos, e o modelo de **maior** acurácia (a logística) tem PR AUC **pior** que os líderes.
+
+**Interpretação pela regressão logística.** As features de resumo são muito colineares (VIF de 10 a 19), e na logística completa até `delay_months` aparece com peso negativo, um artefato. Para interpretar, ajustei uma **logística enxuta** com 5 variáveis (todas com VIF < 3), com intervalos de confiança (`statsmodels`, pseudo-R² = 0,16):
+
+| Variável | Razão de chances (IC 95%) | Tradução |
+|---|---|---|
+| +1 mês de atraso em setembro | **1,99** (1,88–2,11) | **dobra** a chance de calote |
+| +1 mês com atraso no semestre | **1,33** (1,29–1,37) | +33%, além do atraso de setembro |
+| Limite (+1 no log, ≈ × 2,7) | **0,78** (0,75–0,81) | dobrar o limite: ≈ −16% (associação, não causa) |
+| Utilização média (+100 p.p.) | 1,15 (0,98–1,34), p = 0,09 | não significativa com o atraso no modelo |
+| Paga 100% (vs. 0%) da fatura | **1,28** (1,12–1,47) | **contraintuitivo**: o efeito protetor visto na EDA era o atraso disfarçado |
+
+![Razões de chances](../reports/figures/model_03_razoes_chances.png)
+
+> TODO (Etapas 10–17).
 
 ## 4. Conclusões
 

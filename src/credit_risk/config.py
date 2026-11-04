@@ -151,3 +151,12 @@ MIN_CATEGORY_COUNT = 50  # categorias com menos casos no treino viram "infrequen
 # Etapa 8: pay_status como categoria nos modelos lineares (PR AUC +0,016, win rate 100%).
 # Árvores mantêm o número: cortam em qualquer ponto, então a escala não as engana.
 STATUS_AS_CATEGORY_LINEAR = True
+# Etapa 9: logística enxuta para interpretar razões de chances (todas com VIF < 3).
+INTERPRETABLE_FEATURES = [
+    "delay_recent",
+    "delay_months",
+    "log_limit",
+    "util_mean",
+    "pay_ratio_mean",
+]
+VIF_ALERT = 5.0

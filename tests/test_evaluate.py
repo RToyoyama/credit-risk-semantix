@@ -22,7 +22,7 @@ def test_cv_has_15_folds():
 def test_cv_scores_shape_and_brier_positive(xy):
     X, y = xy
     out = cv_scores(LogisticRegression(), X, y)
-    assert out.shape == (15, 3)
+    assert out.shape == (15, 5)
     assert (out["brier"] > 0).all()
 
 
@@ -48,3 +48,33 @@ def test_paired_comparison_brier_lower_is_better():
     res = paired_comparison(base, cand, "brier")
     assert res["win_rate"] == 0.5
     assert res["ganho_medio"] == pytest.approx(0.0)
+
+
+def test_ks_perfect_and_random():
+    from credit_risk.evaluate import ks_statistic
+
+    y = np.array([0, 0, 1, 1])
+    assert ks_statistic(y, np.array([0.1, 0.2, 0.8, 0.9])) == pytest.approx(1.0)
+    assert ks_statistic(y, np.array([0.5, 0.5, 0.5, 0.5])) == pytest.approx(0.0)
+
+
+def test_ks_known_value():
+    from credit_risk.evaluate import ks_statistic
+
+    y = np.array([0, 0, 0, 0, 1, 1])
+    score = np.array([0.1, 0.2, 0.3, 0.7, 0.6, 0.9])
+    assert ks_statistic(y, score) == pytest.approx(0.75)
+
+
+def test_summarize_orders_by_metric_and_compares_to_reference(xy):
+    from credit_risk.evaluate import summarize
+
+    X, y = xy
+    scores = {
+        "dummy": cv_scores(DummyClassifier(strategy="prior"), X, y),
+        "logit": cv_scores(LogisticRegression(), X, y),
+    }
+    table = summarize(scores, reference="dummy")
+    assert table.loc[0, "modelo"] == "logit"
+    assert table.loc[0, "win_rate_vs_dummy"] == 1.0
+    assert {"ks_media", "accuracy_media"} <= set(table.columns)

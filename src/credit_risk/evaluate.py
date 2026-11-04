@@ -7,15 +7,39 @@ diferença reflita a mudança testada e não a sorte da divisão dos dados.
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
+from sklearn.metrics import make_scorer, roc_curve
 from sklearn.model_selection import RepeatedStratifiedKFold, cross_validate
 
 from credit_risk import config
 
+
+def ks_statistic(y_true: np.ndarray, y_score: np.ndarray) -> float:
+    """Estatística KS: maior distância entre as curvas acumuladas de bons e maus.
+
+    Equivale ao máximo de (taxa de verdadeiros positivos − taxa de falsos
+    positivos) ao longo de todos os pontos de corte.
+
+    Args:
+        y_true: Alvo binário.
+        y_score: Probabilidade (ou score) prevista para a classe positiva.
+
+    Returns:
+        KS entre 0 (não separa) e 1 (separa perfeitamente).
+    """
+    fpr, tpr, _ = roc_curve(y_true, y_score)
+    return float(np.max(tpr - fpr))
+
+
 SCORING = {
     "roc_auc": "roc_auc",
     "pr_auc": "average_precision",
+    "ks": make_scorer(ks_statistic, response_method="predict_proba"),
     "brier": "neg_brier_score",
+    "accuracy": "accuracy",
 }
+
+
+LOWER_IS_BETTER = {"brier"}
 
 
 def make_cv(seed: int = config.SEED) -> RepeatedStratifiedKFold:
@@ -66,7 +90,7 @@ def paired_comparison(
         Médias, diferença média, desvio da diferença e win rate do candidato.
     """
     diff = candidate[metric].to_numpy() - base[metric].to_numpy()
-    if metric == "brier":
+    if metric in LOWER_IS_BETTER:
         diff = -diff
     return {
         "base": float(base[metric].mean()),
@@ -75,3 +99,35 @@ def paired_comparison(
         "desvio_ganho": float(diff.std(ddof=1)),
         "win_rate": float(np.mean(diff > 0)),
     }
+
+
+def summarize(
+    fold_scores: dict[str, pd.DataFrame], reference: str, metric: str = "pr_auc"
+) -> pd.DataFrame:
+    """Média e desvio de cada métrica por modelo e comparação pareada com uma referência.
+
+    Args:
+        fold_scores: Métricas por fold de cada modelo (mesmos folds).
+        reference: Modelo contra o qual os demais são comparados.
+        metric: Métrica da comparação pareada.
+
+    Returns:
+        Uma linha por modelo, ordenada pela média de ``metric``.
+    """
+    rows = []
+    for name, scores in fold_scores.items():
+        row = {"modelo": name}
+        for col in scores.columns:
+            row[f"{col}_media"] = scores[col].mean()
+            row[f"{col}_desvio"] = scores[col].std(ddof=1)
+        if name != reference:
+            comp = paired_comparison(fold_scores[reference], scores, metric)
+            row[f"ganho_vs_{reference}"] = comp["ganho_medio"]
+            row[f"win_rate_vs_{reference}"] = comp["win_rate"]
+        rows.append(row)
+    ascending = metric in LOWER_IS_BETTER
+    return (
+        pd.DataFrame(rows)
+        .sort_values(f"{metric}_media", ascending=ascending)
+        .reset_index(drop=True)
+    )
