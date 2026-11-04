@@ -1,0 +1,7 @@
+modelo,estrategia,ganho_pr_auc,win_rate_pr_auc,ganho_brier,win_rate_brier,pr_auc_ok,brier_ok,adotar
+logistic,class_weight,-0.002764826540875576,0.0,-0.047776793260025305,0.0,False,False,False
+logistic,smote,-0.0034294023918440978,0.13333333333333333,-0.04778560943377504,0.0,False,False,False
+random_forest,class_weight,0.0003286536650637236,0.6,-0.03909549499345009,0.0,False,False,False
+random_forest,smote,-0.01428870523567704,0.0,-0.007980954565093604,0.0,False,False,False
+xgboost,class_weight,0.00047759714684031764,0.5333333333333333,-0.04097568392753601,0.0,False,False,False
+xgboost,smote,-0.005170391920249032,0.06666666666666667,-0.001725440224011739,0.0,False,False,False

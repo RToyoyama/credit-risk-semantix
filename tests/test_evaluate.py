@@ -78,3 +78,22 @@ def test_summarize_orders_by_metric_and_compares_to_reference(xy):
     assert table.loc[0, "modelo"] == "logit"
     assert table.loc[0, "win_rate_vs_dummy"] == 1.0
     assert {"ks_media", "accuracy_media"} <= set(table.columns)
+
+
+def test_reliability_table_on_perfectly_calibrated_probabilities():
+    from credit_risk.evaluate import reliability_table
+
+    rng = np.random.default_rng(3)
+    p = rng.random(50_000)
+    y = (rng.random(50_000) < p).astype(int)
+    table = reliability_table(y, p)
+    assert len(table) == 10 and table["n"].sum() == 50_000
+    assert np.allclose(table["prevista"], table["observada"], atol=0.02)
+
+
+def test_oof_predictions_cover_every_row(xy):
+    from credit_risk.evaluate import oof_predictions
+
+    X, y = xy
+    p = oof_predictions(LogisticRegression(), X, y)
+    assert p.shape == (len(X),) and ((p >= 0) & (p <= 1)).all()

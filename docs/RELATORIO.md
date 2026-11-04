@@ -269,7 +269,27 @@ Notebook: [`03_modelagem_e_decisao.ipynb`](../notebooks/03_modelagem_e_decisao.i
 
 ![Razões de chances](../reports/figures/model_03_razoes_chances.png)
 
-> TODO (Etapas 10–17).
+### 3.6 Balanceamento de classes (Etapa 10)
+
+Com 22% de inadimplentes, é comum "balancear" o treino: dar peso maior aos inadimplentes (*class_weight*) ou criar inadimplentes sintéticos (*SMOTE*, aplicado só no treino de cada fold). As duas técnicas fazem o modelo enxergar um mundo com 50% de caloteiros. **Critério fixado antes:** adotar só se o PR AUC subir com win rate > 60% **e** o Brier não piorar (a probabilidade é a matéria-prima da decisão por custo).
+
+| Modelo + técnica | Ganho em PR AUC (win rate) | Brier: sem → com | Probabilidade média prevista (real: 22,1%) |
+|---|---|---|---|
+| XGBoost + class_weight | +0,0005 (53%) | 0,133 → **0,174** | **40,8%** |
+| XGBoost + SMOTE | −0,0052 (7%) | 0,133 → 0,135 | 25,0% |
+| Random Forest + class_weight | +0,0003 (60%) | 0,133 → **0,172** | **40,7%** |
+| Random Forest + SMOTE | −0,0143 (0%) | 0,133 → 0,141 | 29,1% |
+| Logística + class_weight | −0,0028 (0%) | 0,135 → **0,183** | **43,3%** |
+| Logística + SMOTE | −0,0034 (13%) | 0,135 → **0,183** | **43,1%** |
+
+![Curvas de confiabilidade](../reports/figures/model_04_confiabilidade_balanceamento.png)
+
+- **Nenhuma técnica passa no critério.** O PR AUC não melhora de forma consistente, e o Brier piora em **100% das rodadas** em todas as variantes. Com class_weight, o XGBoost fica com Brier **pior que a referência** que prevê 22% para todos (0,172).
+- Sem balanceamento, os modelos já saem quase **calibrados**: erro médio de 0,5 a 0,8 p.p. entre a probabilidade prevista e a taxa real de cada faixa. Com class_weight, 19 a 21 p.p. Exemplo (XGBoost, 7ª faixa): 45% previsto contra 19% real.
+
+**Decisão:** sem balanceamento (`config.BALANCING_STRATEGY = "none"`). Para achar mais inadimplentes, o caminho é **mover o limiar de decisão** com probabilidades confiáveis (Etapa 12), e não distorcer o treino. A hipótese registrada antes se confirmou.
+
+> TODO (Etapas 11–17).
 
 ## 4. Conclusões
 

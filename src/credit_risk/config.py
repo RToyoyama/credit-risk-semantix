@@ -160,3 +160,4 @@ INTERPRETABLE_FEATURES = [
     "pay_ratio_mean",
 ]
 VIF_ALERT = 5.0
+BALANCING_STRATEGY = "none"  # Etapa 10: nenhuma técnica passou (Brier piora em 100% dos folds)

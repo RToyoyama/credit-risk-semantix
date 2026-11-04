@@ -14,7 +14,14 @@ from sklearn.base import BaseEstimator
 from sklearn.pipeline import Pipeline
 
 from credit_risk import config
-from credit_risk.evaluate import cv_scores, paired_comparison, summarize
+from credit_risk.balancing import balanced_pipeline
+from credit_risk.evaluate import (
+    cv_scores,
+    oof_predictions,
+    paired_comparison,
+    reliability_table,
+    summarize,
+)
 from credit_risk.models import CATALOG, build_pipeline
 from credit_risk.preprocessing import make_feature_pipeline
 from credit_risk.split import load_train
@@ -22,6 +29,7 @@ from credit_risk.split import load_train
 logger = logging.getLogger(__name__)
 
 METRICS = ["pr_auc", "roc_auc", "brier"]
+BALANCING_MODELS = ["xgboost", "random_forest", "logistic"]
 
 
 def reference_models() -> dict[str, BaseEstimator]:
@@ -150,10 +158,95 @@ def model_duel() -> pd.DataFrame:
     return summary
 
 
+def decide_with_calibration(results: pd.DataFrame) -> pd.DataFrame:
+    """Critério com veto da calibração: PR AUC sobe (win rate > 60%) e Brier não piora.
+
+    Args:
+        results: Comparações pareadas com colunas ``modelo``, ``estrategia``,
+            ``métrica``, ``ganho_medio`` e ``win_rate``.
+
+    Returns:
+        Uma linha por modelo e estratégia, com a decisão.
+    """
+    wide = results.pivot_table(
+        index=["modelo", "estrategia"], columns="métrica", values=["ganho_medio", "win_rate"]
+    )
+    out = pd.DataFrame(
+        {
+            "ganho_pr_auc": wide[("ganho_medio", "pr_auc")],
+            "win_rate_pr_auc": wide[("win_rate", "pr_auc")],
+            "ganho_brier": wide[("ganho_medio", "brier")],
+            "win_rate_brier": wide[("win_rate", "brier")],
+        }
+    )
+    out["pr_auc_ok"] = (out["ganho_pr_auc"] > 0) & (out["win_rate_pr_auc"] > config.WIN_RATE_MIN)
+    out["brier_ok"] = out["win_rate_brier"] >= 0.5
+    out["adotar"] = out["pr_auc_ok"] & out["brier_ok"]
+    return out.reset_index()
+
+
+def balancing_experiment() -> pd.DataFrame:
+    """Etapa 10: nenhum × class_weight × SMOTE, nos mesmos folds.
+
+    Salva as comparações (``balancing_experiment.csv``) e a decisão com veto
+    da calibração (``balancing_decision.csv``).
+
+    Returns:
+        Tabela de decisão por modelo e estratégia.
+    """
+    df = load_train()
+    X, y = df.drop(columns=[config.TARGET]), df[config.TARGET]
+    rows = []
+    for name in BALANCING_MODELS:
+        base = cv_scores(balanced_pipeline(name, "none"), X, y)
+        for strategy in ("class_weight", "smote"):
+            cand = cv_scores(balanced_pipeline(name, strategy), X, y)
+            for metric in ["pr_auc", "roc_auc", "ks", "brier"]:
+                rows.append(
+                    {
+                        "modelo": name,
+                        "estrategia": strategy,
+                        "métrica": metric,
+                        **paired_comparison(base, cand, metric),
+                    }
+                )
+            logger.info("Balanceamento: %s + %s concluído", name, strategy)
+    comparisons = pd.DataFrame(rows)
+    comparisons.to_csv(config.REPORTS_DIR / "balancing_experiment.csv", index=False)
+    decision = decide_with_calibration(comparisons)
+    decision.to_csv(config.REPORTS_DIR / "balancing_decision.csv", index=False)
+    return decision
+
+
+def balancing_calibration() -> pd.DataFrame:
+    """Etapa 10: curva de confiabilidade (OOF) de cada modelo e estratégia.
+
+    Returns:
+        Tabela longa com 10 faixas por variante (salva em ``reports/``).
+    """
+    df = load_train()
+    X, y = df.drop(columns=[config.TARGET]), df[config.TARGET]
+    tables = []
+    for name in BALANCING_MODELS:
+        for strategy in ["none", "class_weight", "smote"]:
+            p = oof_predictions(balanced_pipeline(name, strategy), X, y)
+            tables.append(
+                reliability_table(y, p).assign(
+                    modelo=name, estrategia=strategy, media_prevista=p.mean()
+                )
+            )
+            logger.info("Calibração: %s + %s concluído", name, strategy)
+    out = pd.concat(tables, ignore_index=True)
+    out.to_csv(config.REPORTS_DIR / "balancing_calibration.csv", index=False)
+    return out
+
+
 EXPERIMENTS = {
     "feature_experiment": feature_experiment,
     "status_category_experiment": status_category_experiment,
     "model_duel": model_duel,
+    "balancing_experiment": balancing_experiment,
+    "balancing_calibration": balancing_calibration,
 }
 
 

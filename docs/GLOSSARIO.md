@@ -86,3 +86,9 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | VIF | *variance inflation factor* | mede a multicolinearidade: 1 ÷ (1 − R²), em que R² é o quanto as outras variáveis explicam aquela. Acima de 5 é alerta | 9 |
 | Pseudo-R² | *pseudo R-squared (McFadden)* | o quanto o modelo melhora em relação a não saber nada, numa escala de 0 a 1. Em crédito, 0,1 a 0,3 é comum | 9 |
 | Confusão | *confounding* | quando o efeito de uma variável é, na verdade, o efeito de outra que anda junto com ela (ex.: pagar pouco "parecia" arriscado, mas era o atraso) | 9 |
+| Desbalanceamento de classes | *class imbalance* | quando uma das respostas é bem mais rara que a outra (aqui, 22% de inadimplentes contra 78% de bons pagadores) | 10 |
+| Pesos por classe | *class weight* | dar mais peso aos erros na classe rara durante o treino. Aqui, cada inadimplente "vale" cerca de 3,5 bons pagadores | 10 |
+| SMOTE | *Synthetic Minority Over-sampling Technique* | criar exemplos sintéticos da classe rara, interpolando entre exemplos parecidos, até as classes ficarem do mesmo tamanho | 10 |
+| Calibração | *calibration* | quando as probabilidades "falam a verdade": entre os clientes que receberam 30%, cerca de 30% dão calote | 10 |
+| Curva de confiabilidade | *reliability curve / calibration curve* | gráfico da probabilidade prevista contra a taxa real, por faixas. Num modelo calibrado, os pontos ficam sobre a diagonal | 10 |
+| Previsão fora do fold (OOF) | *out-of-fold prediction* | a previsão de cada cliente feita por um modelo que **não** o viu no treino. Permite avaliar o treino inteiro sem tocar no holdout | 10 |
