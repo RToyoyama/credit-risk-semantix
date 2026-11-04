@@ -67,9 +67,9 @@ Os nomes são os originais da UCI (camada raw). A renomeação para um padrão c
 
 | Valor | Significado | Origem |
 |---|---|---|
-| -2 | sem consumo no mês | interpretação usual, **não está na documentação** |
+| -2 | **quitou a fatura integralmente** (saldo baixo). A interpretação usual "sem consumo" é contrariada pelos dados: esses clientes têm fatura positiva e pagaram 100% da anterior (mediana) — ver EDA, seção 6 | não documentado; leitura baseada nos dados |
 | -1 | pagou em dia (valor integral) | documentação |
-| 0 | pagou o mínimo, usando crédito rotativo | interpretação usual, **não está na documentação** |
+| 0 | pagou o mínimo, usando crédito rotativo | não documentado; **confirmado pelos dados** (pagam ~6% da fatura anterior) |
 | 1 a 9 | meses de atraso (9 = nove ou mais) | documentação. Na prática o máximo observado é 8 |
 
 ### Alvo
@@ -86,7 +86,8 @@ Os nomes são os originais da UCI (camada raw). A renomeação para um padrão c
 | `MARRIAGE` = 0 | 54 clientes (0,18%) | agrupar em "outros" (Etapa 4) |
 | `BILL_AMT` negativo em pelo menos um mês | 1.930 clientes | válido (crédito a favor); EAD = 0 nesses casos (Etapa 14) |
 | Sequência `PAY_0, PAY_2…` sem `PAY_1` | — | renomear (Etapa 4) |
-| Significado de -2 e 0 em `PAY_*` não documentado | — | usar a interpretação usual e registrar como premissa |
+| Significado de -2 e 0 em `PAY_*` não documentado | — | investigado na EDA: -2 = quitou a fatura; 0 = rotativo. As "contradições" status × fatura (4.594 clientes) são, em sua maioria, artefato da interpretação "sem consumo" |
+| Status 1 (1 mês de atraso) quase ausente de agosto para trás | 25 (ago), 3 (jul), 2 (jun), 0 (mai, abr) no treino | categorias raras agrupadas nos testes estatísticos |
 
 ## Limitações
 
@@ -95,4 +96,4 @@ Os nomes são os originais da UCI (camada raw). A renomeação para um padrão c
 - **Janela curta:** só 6 meses de histórico e um único mês de desfecho (out/2005), período próximo à crise de cartões de Taiwan (2005–2006), o que pode inflar a taxa de default.
 - **Sem variáveis de renda, dívida total ou bureau de crédito**, que um modelo real usaria.
 - **Atributos sensíveis** (sexo, idade, estado civil): usados na EDA e na checagem de equidade (Etapa 13). O uso deles como variável do modelo é decidido e justificado na modelagem.
-- **Interpretação de `PAY_*` = -2 e 0** não é oficial.
+- **Interpretação de `PAY_*` = -2 e 0** não é oficial; a leitura adotada vem do comportamento observado nos dados (EDA).

@@ -128,7 +128,28 @@ A limpeza usa só **regras fixas**, que não aprendem nada com os dados. Por iss
 
 ## 3. Modelagem
 
-> TODO (Etapas 5–17).
+### 3.1 Análise exploratória com inferência (Etapa 5)
+
+Notebook: [`01_eda_inferencia.ipynb`](../notebooks/01_eda_inferencia.ipynb). Feita **só no treino** (24.000 clientes). Critérios fixados antes de ver os dados: significância de 5% após a correção de Holm; tamanho de efeito pela convenção de Cohen (< 0,10 desprezível); variável "relevante" = significativa **e** com efeito ≥ pequeno.
+
+![Tamanho de efeito de cada variável](../reports/figures/eda_07_resumo_efeitos.png)
+
+Dos **28 testes**, **13 são relevantes** e **8 são significativos, mas com efeito desprezível**: com 24 mil clientes, até diferenças mínimas viram "certeza estatística". O tamanho de efeito separa o que importa do que é ruído.
+
+| # | Achado | Decisão |
+|---|---|---|
+| 1 | Default de **22,12%** (IC 95% bootstrap: 21,60%–22,66%); dizer "ninguém dá default" acerta **77,88%** | acurácia não é métrica de escolha |
+| 2 | **Status de pagamento** é o sinal mais forte: V de Cramér = **0,42** em setembro, caindo até 0,25 em abril. Com 2 meses de atraso em setembro, **69%** dão default em outubro | features de atraso máximo, meses em atraso e tendência (Etapa 7) |
+| 3 | **Limite de crédito**: 32% de default no quinto de menor limite e 13% no de maior (rank-biserial = -0,25) | entra no modelo e na utilização do limite |
+| 4 | **Valores pagos** importam (r de -0,16 a -0,23); **valores de fatura** sozinhos não (\|r\| ≤ 0,032) | razões pagamento ÷ fatura e fatura ÷ limite (Etapa 7) |
+| 5 | Sexo, escolaridade, estado civil e idade: significativos, mas **desprezíveis** (V ≤ 0,07). A idade tem um formato em U (27% aos 21–25 anos, 19% aos 30–35) que o Mann-Whitney não detecta, mas que continua fraco (V = 0,063) | não guiam a política; uso no modelo decidido com checagem de equidade |
+| 6 | Status **-2 significa "quitou a fatura"**, não "sem consumo": esses clientes têm fatura positiva e pagaram 100% da anterior | `n_status_bill_mismatch` (V = 0,09) **não vira feature**; data card corrigido |
+
+![Taxa de default por status de pagamento em setembro](../reports/figures/eda_03_status_setembro.png)
+
+**Limite da análise:** tudo é **associação**, não causa. O limite baixo não *causa* o default; o banco deu limite baixo a quem já considerava arriscado. Isso basta para prever, mas não para recomendar "aumentar o limite reduz o risco".
+
+> TODO (Etapas 6–17).
 
 ## 4. Conclusões
 

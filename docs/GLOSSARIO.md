@@ -29,3 +29,16 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | Seed (semente) | *random seed* | número que fixa o "sorteio" do computador, para que ele saia igual toda vez | 4 |
 | Flag | *flag / indicator* | coluna 0/1 que marca um caso especial (ex.: "o valor original não era documentado") | 4 |
 | Camada interim | *interim layer* | os dados já limpos, mas ainda sem features novas | 4 |
+| Análise exploratória (EDA) | *exploratory data analysis* | olhar e testar os dados antes de modelar, para entender o que está associado ao alvo | 5 |
+| Intervalo de confiança (IC) | *confidence interval* | a margem de erro de uma estimativa. "22,12% (IC 95%: 21,60%–22,66%)" quer dizer que a taxa verdadeira muito provavelmente está nessa faixa | 5 |
+| Bootstrap | *bootstrap* | calcular a margem de erro sorteando milhares de "amostras parecidas" (com reposição) a partir dos próprios dados | 5 |
+| Intervalo de Wilson | *Wilson interval* | fórmula para a margem de erro de uma proporção que funciona bem até em grupos pequenos | 5 |
+| p-valor | *p-value* | a chance de ver uma diferença tão grande quanto a observada **se, na verdade, não houvesse diferença nenhuma**. Responde "existe diferença?", não "ela importa?" | 5 |
+| Significância estatística | *statistical significance* | quando o p-valor fica abaixo de um limite combinado antes (aqui, 5%). Com amostras grandes, até diferenças mínimas ficam significativas | 5 |
+| Tamanho de efeito | *effect size* | mede **quanto** uma variável se relaciona com o alvo, independente do tamanho da amostra. Responde "a diferença importa?" | 5 |
+| Teste qui-quadrado | *chi-squared test* | verifica se a taxa de default muda entre as categorias de uma variável. Só é confiável se cada célula esperar ≥ 5 casos | 5 |
+| V de Cramér | *Cramér's V* | tamanho de efeito para categorias: 0 = sem relação, 1 = a categoria determina o resultado | 5 |
+| Teste de Mann-Whitney | *Mann-Whitney U test* | compara dois grupos numa variável numérica sem supor curva em forma de sino. Só detecta "um grupo tende a ter valores maiores" (não vê relações em U) | 5 |
+| Correlação rank-biserial | *rank-biserial correlation* | tamanho de efeito do Mann-Whitney, de -1 a 1. `(r + 1) / 2` é a chance de um inadimplente sorteado ter valor maior que um adimplente sorteado | 5 |
+| Correção de Holm | *Holm-Bonferroni correction* | ajuste para quando se fazem muitos testes: deixa cada um mais exigente, para não "achar" coisas por puro acaso | 5 |
+| Associação × causalidade | *correlation vs. causation* | duas coisas andarem juntas não quer dizer que uma causa a outra | 5 |
