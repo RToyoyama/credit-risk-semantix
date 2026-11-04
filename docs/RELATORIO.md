@@ -191,7 +191,35 @@ O PC4 separa o atraso recente do antigo sem nunca ter visto o alvo, o que refor�
 
 **Resultado negativo:** o segmento **não entra no modelo**. Ele é um resumo grosseiro (3 categorias) das mesmas informações que o modelo já recebe. Fica com o papel de **explicar a carteira** (dashboard, política e desempenho por grupo).
 
-> TODO (Etapas 7–17).
+### 3.3 Criação de variáveis (Etapa 7)
+
+As colunas originais dizem "fatura de NT$ 50 mil" ou "status 2 em setembro". As **features de resumo** traduzem isso para a linguagem do risco, seguindo o que a EDA e a segmentação mostraram. Todas são **regras fixas** calculadas linha a linha (`features.py`), sem aprender nada dos dados.
+
+| Feature | Ideia | Efeito isolado (treino) |
+|---|---|---|
+| `delay_months` | meses com atraso (de 6) | **r = 0,46** (o maior do projeto) |
+| `delay_max` / `delay_recent` | pior atraso / atraso em setembro | r = 0,44 / 0,40 |
+| `delay_trend` | atraso recente (set–jul) − antigo (jun–abr) | r = 0,18 |
+| `log_limit` | limite em escala log | r = −0,25 |
+| `revolving_months` | meses no rotativo (status 0) | r = **−0,22**: rotativo sem atraso é sinal **bom** |
+| `pay_ratio_mean` / `pay_ratio_recent` | fração paga da fatura anterior | r = −0,18 / −0,18 |
+| `util_mean` / `util_recent` | fatura ÷ limite | r = **+0,14** / +0,11 |
+| `util_trend` | utilização recente − antiga | r = −0,10 (contraintuitivo, ver abaixo) |
+| `util_volatility`, `paid_full_all` | variação da utilização; quitou todo mês | desprezíveis sozinhas |
+
+- **Hipótese da EDA confirmada:** a fatura em NT$ não tinha efeito (|r| ≤ 0,032), mas a fatura **comparada ao limite** tem (r = 0,14).
+- **Contraintuitivo:** quem dá default tem utilização **subindo menos** (`util_trend`). A explicação mais provável é que o limite já estava quase todo usado antes, sem espaço para subir.
+
+**Experimento** (critério fixado: adotar se o PR AUC subir com win rate > 60%; CV 5 × 3, mesmos folds; colunas originais × originais + features de resumo):
+
+| Modelo | PR AUC original → com features | Ganho médio | Win rate | Decisão |
+|---|---|---|---|---|
+| Regressão logística | 0,5069 → **0,5314** | +0,024 | **100%** | adotar |
+| XGBoost | 0,5589 → **0,5624** | +0,004 | 73% | adotar |
+
+O ganho é grande na logística e pequeno no XGBoost, como esperado: um modelo linear não consegue criar "máximo de atraso" ou "meses em atraso" sozinho, enquanto as árvores conseguem aproximar parte dessas combinações. **As features de resumo entram no conjunto oficial** (`build_features`).
+
+> TODO (Etapas 8–17).
 
 ## 4. Conclusões
 

@@ -3,7 +3,14 @@ import pandas as pd
 import pytest
 
 from credit_risk import config
-from credit_risk.features import behavior_features, delay_months, payment_ratio, utilization
+from credit_risk.features import (
+    behavior_features,
+    build_features,
+    delay_months,
+    engineered_features,
+    payment_ratio,
+    utilization,
+)
 
 
 @pytest.fixture
@@ -61,3 +68,42 @@ def test_features_are_row_wise(clean_rows):
     single = behavior_features(clean_rows.iloc[[0]])
     both = behavior_features(clean_rows)
     pd.testing.assert_frame_equal(single, both.iloc[[0]])
+
+
+def test_engineered_features_columns_and_finite(clean_rows):
+    out = engineered_features(clean_rows)
+    assert list(out.columns) == config.ENGINEERED_FEATURES
+    assert np.isfinite(out.to_numpy(dtype=float)).all()
+
+
+def test_delay_summaries(clean_rows):
+    clean_rows.loc[0, config.PAY_STATUS] = [3, 2, 0, -1, -2, 0]
+    out = engineered_features(clean_rows).loc[0]
+    assert out["delay_max"] == 3
+    assert out["delay_months"] == 2
+    assert out["delay_recent"] == 3
+    assert out["delay_trend"] == pytest.approx((3 + 2 + 0) / 3 - 0)
+    assert out["revolving_months"] == 2
+
+
+def test_trend_is_positive_when_recent_months_are_higher(clean_rows):
+    clean_rows.loc[0, config.BILL_AMT] = [9_000, 9_000, 9_000, 1_000, 1_000, 1_000]
+    out = engineered_features(clean_rows).loc[0]
+    assert out["util_trend"] == pytest.approx(0.8)
+    assert out["util_volatility"] > 0
+
+
+def test_paid_full_all_flag(clean_rows):
+    clean_rows.loc[0, config.PAY_AMT] = 10_000
+    out = engineered_features(clean_rows)
+    assert out["paid_full_all"].tolist() == [1, 0]
+
+
+def test_build_features_drops_id_and_target(clean_rows):
+    clean_rows["id"] = [1, 2]
+    clean_rows[config.TARGET] = [0, 1]
+    for col in ["age", *config.CATEGORICAL_COLS]:
+        clean_rows[col] = 1
+    out = build_features(clean_rows)
+    assert "id" not in out and config.TARGET not in out
+    assert out.shape[1] == len(config.CATEGORICAL_COLS) + len(config.RAW_NUMERIC_COLS) + 13

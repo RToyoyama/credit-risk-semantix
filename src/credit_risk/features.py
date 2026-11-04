@@ -70,3 +70,58 @@ def behavior_features(df: pd.DataFrame) -> pd.DataFrame:
         17 colunas: utilização (6), taxa de pagamento (5) e atraso (6).
     """
     return pd.concat([utilization(df), payment_ratio(df), delay_months(df)], axis=1)
+
+
+def _recent_minus_old(values: pd.DataFrame) -> pd.Series:
+    """Média dos meses recentes menos a média dos antigos (positivo = subindo)."""
+    k = config.RECENT_MONTHS
+    return values.iloc[:, :k].mean(axis=1) - values.iloc[:, k:].mean(axis=1)
+
+
+def engineered_features(df: pd.DataFrame) -> pd.DataFrame:
+    """Features de resumo do histórico, guiadas pela EDA e pela segmentação.
+
+    Todas são regras fixas calculadas linha a linha (sem aprender dos dados).
+
+    Args:
+        df: Dados limpos.
+
+    Returns:
+        Colunas listadas em ``config.ENGINEERED_FEATURES``.
+    """
+    util = utilization(df)
+    ratio = payment_ratio(df)
+    delay = delay_months(df)
+    status = df[config.PAY_STATUS]
+    out = pd.DataFrame(
+        {
+            "log_limit": np.log(df["limit_bal"]),
+            "util_mean": util.mean(axis=1),
+            "util_recent": util["utilization_1"],
+            "util_trend": _recent_minus_old(util),
+            "util_volatility": util.std(axis=1),
+            "pay_ratio_mean": ratio.mean(axis=1),
+            "pay_ratio_recent": ratio["payment_ratio_1"],
+            "paid_full_all": (ratio >= 1).all(axis=1).astype("int8"),
+            "delay_max": delay.max(axis=1),
+            "delay_months": (delay > 0).sum(axis=1),
+            "delay_recent": delay["delay_1"],
+            "delay_trend": _recent_minus_old(delay),
+            "revolving_months": (status == 0).sum(axis=1),
+        },
+        index=df.index,
+    )
+    return out[config.ENGINEERED_FEATURES]
+
+
+def build_features(df: pd.DataFrame) -> pd.DataFrame:
+    """Colunas originais (sem ID e sem alvo) + features de resumo.
+
+    Args:
+        df: Dados limpos.
+
+    Returns:
+        Matriz de features determinísticas, pronta para o pré-processamento.
+    """
+    base = df[config.CATEGORICAL_COLS + config.RAW_NUMERIC_COLS]
+    return pd.concat([base, engineered_features(df)], axis=1)

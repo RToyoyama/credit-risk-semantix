@@ -81,6 +81,7 @@ A análise exploratória (Etapa 5) usou **só os dados de treino** e testou cada
 | **Uma suposição comum sobre estes dados estava errada:** o código -2 não quer dizer "sem consumo", e sim "quitou a fatura" | o documento dos dados foi corrigido; a análise verificou a suposição em vez de aceitá-la |
 | **Três tipos de cliente** (Etapa 6, formados sem saber quem deu calote): **quitadores** (43%, 16,7% de calote), **rotativo em dia** (47%, 18,8%) e **atraso crônico** (10%, **62,4%**) | o risco vem do **atraso**, não do uso do rotativo: tratar o rotativo como risco cortaria receita sem reduzir perda |
 | **Os grupos não ajudam o modelo a prever** (ganho nulo nos dois modelos testados) | resultado negativo documentado: os grupos servem para **explicar** a carteira, não para prever |
+| **Resumir o histórico ajuda** (Etapa 7): "meses com atraso" é a variável mais forte do projeto; com 13 variáveis de resumo, a regressão logística melhorou em todas as 15 rodadas de teste | as variáveis de resumo entram no modelo |
 
 Detalhes: notebooks de [EDA](notebooks/01_eda_inferencia.ipynb) e de [segmentação](notebooks/02_segmentacao.ipynb), e o [relatório](docs/RELATORIO.md#3-modelagem).
 
@@ -94,7 +95,7 @@ Detalhes: notebooks de [EDA](notebooks/01_eda_inferencia.ipynb) e de [segmentaç
 | **Critérios definidos antes dos experimentos** | evita ajustar a régua depois de ver o resultado |
 | **Dados verificados na entrada:** download direto da fonte oficial, com conferência da "impressão digital" do arquivo (SHA-256) e validação de colunas, tipos e faixas | se a fonte mudar, o processo para em vez de seguir com dados diferentes |
 | **Uma única fonte de verdade para as regras de negócio** | API, dashboard e avaliação usam o mesmo código de scoring (a partir da Etapa 14) |
-| **Testes automatizados** e verificação de código a cada commit | hoje: 82 testes |
+| **Testes automatizados** e verificação de código a cada commit | hoje: 90 testes |
 
 **Decisão consciente:** a base tem 30 mil linhas e cabe na memória de qualquer computador. Por isso o projeto usa pandas e scikit-learn, e não ferramentas de big data (Spark, dbt, Airflow), que só aumentariam a complexidade sem nenhum ganho.
 
@@ -110,7 +111,8 @@ Detalhes: notebooks de [EDA](notebooks/01_eda_inferencia.ipynb) e de [segmentaç
 | 4 | Limpeza e separação da prova final (holdout) | ✅ |
 | 5 | Análise exploratória com inferência estatística | ✅ |
 | 6 | Segmentação de clientes (PCA + K-means) | ✅ |
-| 7–8 | Criação de variáveis e pré-processamento | ⏳ |
+| 7 | Criação de variáveis | ✅ |
+| 8 | Pré-processamento | ⏳ |
 | 9–11 | Comparação de modelos, balanceamento, ajuste e combinação | ⏳ |
 | 12 | Calibração e política de decisão por custo | ⏳ |
 | 13 | Avaliação final na prova lacrada | ⏳ |
@@ -132,6 +134,7 @@ make venv      # cria o ambiente com Python 3.11
 make install   # instala as versões exatas do requirements.lock
 make data      # baixa os dados da UCI, confere o SHA-256 e valida
 make split     # limpa os dados e separa treino / holdout
+make experiments  # roda os experimentos e salva os resultados em reports/
 make test      # roda os testes
 ```
 
@@ -155,6 +158,7 @@ credit-risk-semantix/
 │   ├── figures/           # gráficos gerados
 │   ├── eda_tests.csv      # resultado de todos os testes estatísticos
 │   ├── segment_*.csv      # escolha de k, perfis e experimento dos segmentos
+│   ├── feature_experiment.csv  # experimento das variáveis de resumo
 │   └── holdout_ids.csv    # IDs da prova final lacrada
 ├── src/credit_risk/
 │   ├── config.py          # caminhos, seeds, schema e critérios
@@ -162,9 +166,10 @@ credit-risk-semantix/
 │   ├── cleaning.py        # limpeza com regras fixas
 │   ├── split.py           # separação do holdout
 │   ├── stats.py           # intervalos de confiança, testes e tamanhos de efeito
-│   ├── features.py        # features comportamentais (regras fixas)
+│   ├── features.py        # features comportamentais e de resumo (regras fixas)
 │   ├── segmentation.py    # PCA + K-means e perfil dos segmentos
 │   ├── evaluate.py        # validação cruzada e comparação pareada
+│   ├── experiments.py     # experimentos pareados (resultados em reports/)
 │   └── viz.py             # estilo padrão dos gráficos
 ├── tests/                 # testes automatizados
 ├── Makefile

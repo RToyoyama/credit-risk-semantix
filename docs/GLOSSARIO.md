@@ -62,3 +62,8 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | Comparação pareada | *paired comparison* | comparar duas versões de um modelo **nos mesmos folds**, para que a diferença venha da mudança e não da sorte da divisão | 6 |
 | Win rate | *win rate* | em quantos folds a versão nova venceu a antiga. Win rate de 60% = venceu em 9 de 15 | 6 |
 | PR AUC | *precision-recall AUC / average precision* | mede o quanto o modelo acha os inadimplentes sem acusar bons pagadores. Um chute tem PR AUC igual à taxa de default (0,22) | 6 |
+| Criação de variáveis | *feature engineering* | transformar os dados brutos em colunas que falam a "língua" do problema. Ex.: em vez de "fatura de NT$ 50 mil", "fatura = 90% do limite" | 7 |
+| Função pura | *pure function* | função que, para a mesma entrada, sempre dá a mesma saída e não depende de mais nada. Aqui: cada feature usa só os dados daquele cliente | 7 |
+| Tendência | *trend* | diferença entre o comportamento recente e o antigo. Positiva = o valor está subindo | 7 |
+| Volatilidade | *volatility* | o quanto um valor oscila de um mês para o outro (aqui, o desvio-padrão da utilização) | 7 |
+| Escala logarítmica | *log transform* | trocar o valor pelo seu logaritmo, o que "aproxima" números muito grandes. De 10 mil para 1 milhão há 100×, mas no log a distância fica parecida com a de 100 para 10 mil | 7 |

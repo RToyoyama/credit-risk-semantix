@@ -127,3 +127,23 @@ KMEANS_N_INIT = 10
 CV_SPLITS = 5
 CV_REPEATS = 3
 WIN_RATE_MIN = 0.60  # para adotar uma mudança: PR AUC sobe com win rate > 60%
+
+# ── Features de resumo (Etapa 7) ────────────────────────────
+RECENT_MONTHS = 3  # set–jul = recente; jun–abr = antigo
+CATEGORICAL_COLS = ["sex", "education", "marriage"]
+RAW_NUMERIC_COLS = ["limit_bal", "age", *PAY_STATUS, *BILL_AMT, *PAY_AMT]
+ENGINEERED_FEATURES = [
+    "log_limit",
+    "util_mean",
+    "util_recent",
+    "util_trend",
+    "util_volatility",
+    "pay_ratio_mean",
+    "pay_ratio_recent",
+    "paid_full_all",
+    "delay_max",
+    "delay_months",
+    "delay_recent",
+    "delay_trend",
+    "revolving_months",
+]
