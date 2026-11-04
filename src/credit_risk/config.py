@@ -103,3 +103,14 @@ N_BOOT = 10_000
 CI_LEVEL = 0.95
 # Cohen: abaixo de 0,10 desprezível; 0,10 pequeno; 0,30 médio; 0,50 grande.
 EFFECT_THRESHOLDS: dict[str, float] = {"pequeno": 0.10, "médio": 0.30, "grande": 0.50}
+
+# ── Features comportamentais (regras fixas, sem alvo) ───────
+UTILIZATION_CLIP: tuple[float, float] = (0.0, 1.5)  # 99% dos clientes usam <= 109% do limite
+PAYMENT_RATIO_CLIP: tuple[float, float] = (0.0, 1.0)  # pagar mais que a fatura = quitou
+UTILIZATION = [f"utilization_{i}" for i in range(1, N_MONTHS + 1)]
+PAYMENT_RATIO = [f"payment_ratio_{i}" for i in range(1, N_MONTHS)]  # mês 6 não tem fatura anterior
+DELAY = [f"delay_{i}" for i in range(1, N_MONTHS + 1)]
+BEHAVIOR_FEATURES = UTILIZATION + PAYMENT_RATIO + DELAY
+
+# ── Segmentação ─────────────────────────────────────────────
+PCA_VARIANCE_TARGET = 0.80  # menor nº de componentes que explique >= 80%

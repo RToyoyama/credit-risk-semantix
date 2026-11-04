@@ -55,7 +55,7 @@ Os segmentos de clientes (PCA + K-means) dão o contexto interpretável que atra
 **Peculiaridades conhecidas dos dados (tratar e documentar):**
 - `EDUCATION` tem valores não documentados (0, 5, 6) → agrupar em "outros" e justificar.
 - `MARRIAGE` tem o valor 0, não documentado → agrupar em "outros".
-- `PAY_0..PAY_6` usam -2 e -1 (sem consumo / pago em dia), 0 (crédito rotativo) e 1–9 (meses de atraso). Repare que a sequência pula `PAY_1`: renomeie as colunas para um padrão consistente.
+- `PAY_0..PAY_6` usam -2 e -1 (pagou; a EDA mostrou que -2 = **quitou a fatura**, não "sem consumo"), 0 (crédito rotativo) e 1–9 (meses de atraso). Repare que a sequência pula `PAY_1`: renomeie as colunas para um padrão consistente.
 - Valores monetários em NT$ (dólar taiwanês); `BILL_AMT` pode ser negativo (crédito a favor do cliente).
 - Os dados são de 2005, de outro país: registrar como limitação (distribuição temporal e geográfica).
 

@@ -149,7 +149,24 @@ Dos **28 testes**, **13 são relevantes** e **8 são significativos, mas com efe
 
 **Limite da análise:** tudo é **associação**, não causa. O limite baixo não *causa* o default; o banco deu limite baixo a quem já considerava arriscado. Isso basta para prever, mas não para recomendar "aumentar o limite reduz o risco".
 
-> TODO (Etapas 6–17).
+### 3.2 Segmentação comportamental (Etapa 6)
+
+Notebook: [`02_segmentacao.ipynb`](../notebooks/02_segmentacao.ipynb). Os grupos são formados **sem o alvo** e **sem perfil demográfico**: descrevem como o cliente usa e paga o cartão.
+
+**Parte A — PCA.** Três comportamentos por mês, calculados com regras fixas (sem vazamento): utilização do limite (6 meses), fração da fatura anterior que foi paga (5 meses) e meses de atraso (6 meses), totalizando 17 colunas. Depois de padronizar (média e desvio aprendidos dentro do pipeline), o PCA resumiu as 17 colunas em **4 componentes, que explicam 82,3% da variação** (critério fixado antes: ≥ 80%; a regra de Kaiser indicaria 3).
+
+| Componente | Variância | Leitura de negócio |
+|---|---|---|
+| PC1 | 50,7% | **rotativo**: usa muito do limite e paga pouco da fatura (o polo oposto quita tudo) |
+| PC2 | 19,5% | **atraso** geral |
+| PC3 | 6,7% | **usa muito, mas paga** (grande utilização sem rotativo) |
+| PC4 | 5,4% | **tendência do atraso**: positivo = atraso recente (piorando) |
+
+![Cargas do PCA](../reports/figures/seg_02_cargas_pca.png)
+
+O PC4 separa o atraso recente do antigo sem nunca ter visto o alvo, o que reforça o achado da EDA de que o atraso recente é o sinal mais forte.
+
+> TODO (Etapa 6, Parte B — K-means; Etapas 7–17).
 
 ## 4. Conclusões
 

@@ -42,3 +42,12 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | Correlação rank-biserial | *rank-biserial correlation* | tamanho de efeito do Mann-Whitney, de -1 a 1. `(r + 1) / 2` é a chance de um inadimplente sorteado ter valor maior que um adimplente sorteado | 5 |
 | Correção de Holm | *Holm-Bonferroni correction* | ajuste para quando se fazem muitos testes: deixa cada um mais exigente, para não "achar" coisas por puro acaso | 5 |
 | Associação × causalidade | *correlation vs. causation* | duas coisas andarem juntas não quer dizer que uma causa a outra | 5 |
+| Segmentação | *customer segmentation* | dividir os clientes em grupos com comportamento parecido, para tratar cada grupo de um jeito | 6 |
+| Utilização do limite | *credit utilization* | quanto do limite a fatura ocupa. Fatura de 3 mil num limite de 10 mil = 30% | 6 |
+| Padronização | *standardization* | colocar todas as colunas na mesma régua: (valor − média) ÷ desvio-padrão. Evita que uma coluna "grite mais alto" só por causa da escala | 6 |
+| PCA | *principal component analysis* | técnica que resume muitas colunas parecidas em poucas "direções" que guardam a maior parte da informação | 6 |
+| Componente principal | *principal component* | cada uma dessas "direções": uma combinação das colunas originais | 6 |
+| Variância explicada | *explained variance* | quanto da variação total dos dados um componente consegue representar | 6 |
+| Autovetor e autovalor | *eigenvector / eigenvalue* | na álgebra linear do PCA: o autovetor é a direção do componente, e o autovalor diz quanta variância ele carrega | 6 |
+| Regra de Kaiser | *Kaiser criterion* | manter só componentes com autovalor > 1, ou seja, que "valem" mais que uma coluna original sozinha | 6 |
+| Carga | *loading* | o peso de cada coluna original num componente. Positiva: andam juntos; negativa: andam em sentidos opostos | 6 |
