@@ -1,6 +1,8 @@
 # Relatório — Risco de Crédito Orientado a Custo
 
-> Documento vivo: cada etapa do projeto acrescenta uma parte. Os três tópicos obrigatórios da entrega (**Coleta de dados**, **Modelagem** e **Conclusões**) são preenchidos ao longo das etapas. Termos técnicos estão explicados no [Glossário](GLOSSARIO.md).
+> Os três tópicos obrigatórios da entrega: **[Coleta de dados](#2-coleta-de-dados)** (Seção 2), **[Modelagem](#3-modelagem)** (Seção 3) e **[Conclusões](#4-conclusões)** (Seção 4). A Seção 1 apresenta o problema. Termos técnicos estão no [Glossário](GLOSSARIO.md); a ficha do modelo, no [model card](model_card.md); a dos dados, no [data card](data_card.md).
+>
+> **Resumo:** no holdout (6.000 clientes nunca vistos), acionar os 10% de maior valor esperado gera **NT$ 7,52 mi** de valor líquido, **+NT$ 2,36 mi (+46%)** a mais que a regra de atraso (IC 95%: +1,59 a +3,15 mi). Recomendação na [Seção 4.1](#41-resposta-ao-problema).
 
 ---
 
@@ -564,8 +566,110 @@ O dashboard (Streamlit) conta a história do projeto para o gestor e permite **e
 
 **Integração contínua (GitHub Actions):** a cada push, lint + testes (inclusive os da API, com um modelo treinado no próprio teste) e construção da imagem com os testes rodando dentro dela. Um segundo workflow, **agendado para todo dia 1º do mês**, reconstrói os artefatos, roda o monitoramento (Etapa 16) e publica o `monitoring.json`, a rotina mensal sem precisar de Airflow.
 
-> TODO (Etapa 20).
+### 3.20 Arquitetura e como seria em produção
+
+**Como as peças se ligam hoje.** Cada caixa é um módulo de `src/credit_risk/`; a seta mostra quem alimenta quem. O ponto central é `scoring.py`: avaliação, API e dashboard passam todos por ele, então uma regra de negócio só existe em um lugar.
+
+```mermaid
+flowchart LR
+    UCI[(UCI<br/>dataset 350)] -->|download + SHA-256| RAW[data.py<br/>raw]
+    RAW --> CLEAN[cleaning.py<br/>interim]
+    CLEAN --> SPLIT{split.py}
+    SPLIT -->|80% treino| TRAIN[features.py +<br/>preprocessing.py]
+    SPLIT -->|20% lacrado| HOLD[(holdout)]
+    TRAIN --> CV[evaluate / tuning /<br/>decision.py<br/>CV 5×3]
+    CV -->|escolhas| FINAL[final.py<br/>XGBoost]
+    HOLD -->|uma vez| FINAL
+    FINAL --> SCORE[scoring.py<br/>PD → EL → score →<br/>faixa → ação]
+    SCORE --> REASONS[reasons.py<br/>TreeSHAP]
+    SCORE --> API[api/<br/>FastAPI :8000]
+    SCORE --> APP[app/<br/>Streamlit :8501]
+    SCORE --> MON[monitoring.py<br/>PSI + indicadores]
+    MON -.->|cron mensal| GHA[GitHub Actions<br/>monitor.yml]
+```
+
+**Como seria uma DAG no Airflow.** Uma DAG (*directed acyclic graph*, "grafo dirigido sem ciclos") é a receita de um fluxo de tarefas: cada tarefa só começa quando as anteriores terminam, e nada volta para trás. Hoje a rotina mensal é um único job no GitHub Actions, o suficiente para 30 mil clientes e uma execução por mês. Numa operação real, com o lote vindo de um banco de dados, desfechos chegando com atraso e várias equipes dependendo do resultado, cada passo viraria uma tarefa do Airflow, com reexecução, alertas e histórico por tarefa. As funções já existem; o Airflow só as chamaria:
+
+```mermaid
+flowchart LR
+    subgraph DAG["DAG credit_risk_monthly · schedule: 0 9 1 * *"]
+        direction LR
+        A[extrair_lote<br/>clientes do mês] --> B[validar_schema<br/>data.ensure_valid]
+        B --> C[pontuar<br/>scoring.score_clients]
+        C --> D[monitorar<br/>monitoring.run_monitoring]
+        D --> E{branch:<br/>status}
+        E -->|estável| F[publicar<br/>faixas e prioridades]
+        E -->|atenção| G[alertar time de risco<br/>+ publicar]
+        E -->|investigar| H[congelar política<br/>+ abrir revisão]
+        C --> I[aguardar desfechos<br/>sensor, mês seguinte]
+        I --> J[avaliar desempenho<br/>PR AUC, calibração,<br/>valor da política]
+    end
+```
+
+| Tarefa | Função que já existe | Observação |
+|---|---|---|
+| `validar_schema` | `data.ensure_valid` (adaptada ao lote, que não tem o alvo) | falha a DAG se o lote vier com colunas ou faixas inesperadas |
+| `pontuar` | `scoring.score_clients` | mesma fonte única da API |
+| `monitorar` | `monitoring.run_monitoring` | devolve o status usado no *branch* (desvio condicional) |
+| `avaliar desempenho` | `evaluate` + `decision` | só quando os desfechos reais chegam (um mês depois); decide entre recalibrar e retreinar |
+
+**Por que não implementar o Airflow aqui:** ele exige banco de metadados, agendador e servidor web, uma infraestrutura maior que o próprio projeto, para orquestrar **um** job mensal. A decisão foi deixar a lógica independente de orquestrador (funções puras e testadas) e agendar com o que já existe (GitHub Actions). Trocar de orquestrador não muda uma linha de `src/`.
 
 ## 4. Conclusões
 
-> TODO (Etapa 20).
+### 4.1 Resposta ao problema
+
+O critério de sucesso foi fixado antes de qualquer modelo (Seção 1.5): o modelo só seria recomendado se gerasse **mais resultado financeiro** do que não agir **e** do que a melhor regra fixa de atraso, com intervalo de confiança acima de zero, no holdout.
+
+| Critério | Resultado no holdout (6.000 clientes nunca vistos, 600 acionados) | |
+|---|---|---|
+| Vencer "não agir" | **+NT$ 7,52 mi** de valor líquido; evita 18,6% da perda da carteira (NT$ 40,4 mi) | ✅ |
+| Vencer a regra de atraso | **+NT$ 2,36 mi (+46%)**, IC 95%: +1,59 a +3,15 mi | ✅ |
+| Desempenho previsto pela CV | PR AUC 0,560 no holdout × 0,566 na CV (dentro da faixa) | ✅ |
+| Sem viés por sexo ou idade | erro de calibração ≤ 2,0 p.p. em todos os grupos | ✅ |
+
+**Recomendação:** adotar a política de acionar, todo mês, os **10% de clientes com maior valor esperado de ação** (PD × perda evitável − custos), com score e faixa A–E para comunicar o risco, motivos por cliente e monitoramento mensal. Começar por um **piloto com grupo de controle** (ver 4.4), porque o valor em dinheiro depende de premissas que ainda não foram medidas.
+
+**Revisitando a Seção 1.4 ("quando ML não seria a escolha certa"):** o ganho sobre a regra simples é grande e estável (12 de 12 cenários de premissas), e cada decisão tem motivos explicáveis. O ML se justifica aqui. Mas o resultado mais importante é que **o modelo sozinho não basta**: ordenar só pela PD empata ou perde da regra de atraso (holdout: −NT$ 0,15 mi). O ganho vem de **combinar a probabilidade com o valor em jogo**.
+
+### 4.2 O que foi testado e rejeitado
+
+Cada técnica entrou só se passasse por um critério fixado antes. Estas não passaram, e o projeto ficou mais simples por isso:
+
+| Técnica | Resultado | Decisão |
+|---|---|---|
+| Segmentos (K-means) como variável | ganho nulo em PR AUC | segmentos só para **explicar** a carteira |
+| Balanceamento (`class_weight`, SMOTE) | não melhora a detecção e infla a PD média de 22% para 41% | sem balanceamento |
+| Ensemble (votação, stacking) | no máximo +0,0009 de PR AUC, menos que a variação entre rodadas; o stacking piora o Brier em 13 de 15 rodadas; erros com correlação de até 0,998 | XGBoost sozinho |
+| Calibração (sigmoid, isotônica) | sigmoid piora o Brier; isotônica piora o PR AUC | sem correção |
+| Sexo, estado civil e idade | retirá-los não muda desempenho nem valor | fora do modelo |
+
+### 4.3 Limitações
+
+- **Dados:** Taiwan, 2005, um banco, perto de uma crise de cartões; 6 meses de histórico; sem renda, dívida total ou birô. O **método** se transfere; o **modelo treinado**, não.
+- **Premissas de negócio** (LGD 60%, eficácia 30%, custos NT$ 100 + 300) vêm de referências de mercado, não de medição. A sensibilidade mostra que a conclusão (modelo > regra) não muda, mas o valor em dinheiro muda; a eficácia é a que mais pesa.
+- **Três decisões foram tomadas depois de ver resultados**, todas registradas: a capacidade de 10% (Seção 3.10), a materialidade dos motivos (3.15) e os indicadores complementares do monitoramento (3.16). Nenhuma usou o holdout.
+- **Associação, não causa:** o modelo não diz o que *causa* o calote; não se deve usá-lo para recomendar "aumentar o limite".
+- **Equidade:** auditoria de resultados; não descarta discriminação indireta por *proxies*.
+- **Desempenho mais fraco dentro do atraso crônico** (ROC AUC 0,68).
+
+### 4.4 Próximos passos
+
+1. **Piloto com grupo de controle** (teste A/B): acionar metade dos prioritários e não a outra, para medir a eficácia real da ação, a premissa que mais pesa.
+2. **Retreinar com dados locais** e incluir renda e birô de crédito.
+3. **Monitorar desempenho** quando os desfechos chegarem, além da estabilidade; definir com dados reais os limites dos indicadores complementares.
+4. **Otimizar a ação por faixa** (que ação para quem), em vez de uma ação única.
+5. Levar a rotina para um orquestrador (Seção 3.20) quando houver mais de um job ou dependências entre equipes.
+
+### 4.5 Lições aprendidas
+
+| Lição | Onde apareceu |
+|---|---|
+| **Uma prova lacrada de verdade dá confiança.** A CV previu o holdout com diferença de 0,006 em PR AUC; no projeto anterior (Titanic), a CV dizia 0,85 e a realidade foi 0,78 | Etapas 4 e 13 |
+| **Fixar o critério antes evita se enganar.** Cinco ideias populares foram rejeitadas por regra, não por gosto | Etapas 6, 10–13 |
+| **Acurácia e até PR AUC não são o objetivo; dinheiro é.** O melhor modelo em PD perdeu da regra até entrar a exposição | Etapa 12 |
+| **Questionar a documentação dos dados.** O código -2 não era "sem consumo", e sim "quitou a fatura" | Etapa 5 |
+| **A métrica padrão do mercado pode falhar.** O PSI não viu uma crise simulada; indicadores de negócio viram | Etapa 16 |
+| **Olhar o produto pega erros que os testes não pegam.** As capturas do dashboard revelaram um ponto de equilíbrio errado | Etapa 18 |
+| **Testar no ambiente real.** O dashboard funcionava local e quebrava na nuvem (pacote instalado fora do projeto) | Etapa 18 |
+| **Resultado negativo também é resultado**, e ele simplifica o sistema | todo o projeto |

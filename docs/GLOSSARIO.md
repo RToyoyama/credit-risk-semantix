@@ -150,3 +150,7 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | Integração contínua (CI) | *continuous integration* | um robô que roda os testes automaticamente a cada mudança enviada ao GitHub | 19 |
 | GitHub Actions | *GitHub Actions* | o serviço do GitHub que executa esses robôs (workflows) | 19 |
 | Cron | *cron schedule* | o jeito de agendar uma tarefa para se repetir (ex.: todo dia 1º do mês às 9h) | 19 |
+| Model card | *model card* | a "bula" do modelo: para que serve, para que não serve, como foi avaliado, riscos e limitações | 20 |
+| DAG | *directed acyclic graph* | a receita de um fluxo de tarefas automáticas: cada tarefa só começa quando as anteriores terminam, e nada volta para trás (é o formato do Airflow) | 20 |
+| Teste A/B (grupo de controle) | *A/B test / control group* | aplicar a ação só em metade dos clientes sorteados e comparar com a outra metade, para medir o efeito real da ação | 20 |
+| Resumo executivo | *executive summary* | o começo do documento com o problema, o resultado e a recomendação, para quem só tem 2 minutos | 20 |

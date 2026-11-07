@@ -4,21 +4,39 @@
 ![Python 3.11](https://img.shields.io/badge/python-3.11-blue)
 [![Licença: MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-green)](LICENSE)
 ![Dados: CC BY 4.0](https://img.shields.io/badge/dados-CC%20BY%204.0-lightgrey)
-![Status: em construção](https://img.shields.io/badge/status-em%20constru%C3%A7%C3%A3o-orange)
+[![Dashboard](https://img.shields.io/badge/dashboard-Streamlit-ff4b4b)](https://credit-risk-semantix-vsjmawoelrtyrwzz49nnaa.streamlit.app/)
 
-> Projeto de parceria **EBAC × Semantix**. Em construção: esta página mostra o que já está pronto e o que vem a seguir.
+> Projeto de parceria **EBAC × Semantix**.
 >
-> 🔗 **Dashboard online:** https://credit-risk-semantix-vsjmawoelrtyrwzz49nnaa.streamlit.app/
+> 🔗 **[Dashboard online](https://credit-risk-semantix-vsjmawoelrtyrwzz49nnaa.streamlit.app/)** · 📄 **[Relatório](docs/RELATORIO.md)** (Coleta de dados · Modelagem · Conclusões) · 🧾 **[Model card](docs/model_card.md)** · 📖 **[Glossário](docs/GLOSSARIO.md)**
 
-**Em uma frase:** um sistema que ajuda uma emissora de cartão de crédito a decidir, todo mês, **em quais clientes agir antes que eles deixem de pagar**, escolhendo a decisão pelo **dinheiro em jogo**, e não pela taxa de acerto.
+**Em uma frase:** um sistema que ajuda uma emissora de cartão de crédito a decidir, todo mês, **em quais clientes agir antes que eles deixem de pagar**, escolhendo pelo **dinheiro em jogo**, e não pela taxa de acerto.
+
+---
+
+## Resumo executivo
+
+**O problema.** 22% dos clientes de cartão desta base deixam de pagar a fatura seguinte. Agir antes (contato, renegociação, revisão de limite) reduz a perda, mas custa dinheiro e incomoda bons clientes, e a equipe só consegue atender **10% da carteira por mês**. A pergunta é: **quais 10%?**
+
+**O resultado.** Testado uma única vez em **6.000 clientes que o modelo nunca viu**:
+
+| Quem acionar (600 clientes) | Valor líquido (perda evitada − custos) |
+|---|---|
+| Ninguém | NT$ 0 (a perda de NT$ 40,4 mi segue inteira) |
+| Regra de atraso (os mais atrasados primeiro, sem modelo) | NT$ 5,17 mi |
+| **Os de maior valor esperado (modelo)** | **NT$ 7,52 mi** |
+
+**+NT$ 2,36 milhões (+46%) a mais que a regra de atraso** (intervalo de confiança de 95%: +1,59 a +3,15 mi), evitando 18,6% da perda da carteira. No treino, o modelo vence a regra em **12 de 12** cenários de premissas de negócio testados.
+
+**A recomendação.** Adotar a política "acionar os 10% de maior valor esperado", com score 0–1000, faixas A–E e os motivos de cada decisão, monitorada mensalmente. Começar com um **piloto com grupo de controle** para medir a eficácia real da ação, a premissa que mais pesa no valor.
+
+**O achado que muda a decisão:** um bom modelo de risco **sozinho não basta**. Escolher só pela probabilidade de calote **empata com a regra de atraso**. O ganho aparece quando se combina a probabilidade com **quanto o cliente deve**.
 
 ---
 
 ## 1. O problema
 
-Um cartão de crédito é um empréstimo de curto prazo: o cliente compra hoje e paga no mês seguinte. A maioria paga, mas uma parte não paga. Isso é a **inadimplência**, que o mercado chama de **default**. Quando o calote acontece, o banco recupera só uma parte da dívida, e tarde.
-
-Por isso vale mais **agir antes**: oferecer renegociação, reduzir o limite ou fazer um contato preventivo. Só que agir também custa, e é aí que a decisão fica difícil.
+Um cartão de crédito é um empréstimo de curto prazo: o cliente compra hoje e paga no mês seguinte. A maioria paga; uma parte, não. Isso é a **inadimplência**, que o mercado chama de **default**. Quando o calote acontece, o banco recupera só uma parte da dívida, e tarde. Por isso vale mais **agir antes**, só que agir também custa.
 
 ### Os dois erros não custam igual
 
@@ -27,35 +45,54 @@ Por isso vale mais **agir antes**: oferecer renegociação, reduzir o limite ou 
 | Diz "vai pagar", mas o cliente dá calote | ninguém age e o prejuízo passa | **caro**: a parte da dívida que não volta |
 | Diz "vai dar calote", mas o cliente pagaria | age-se à toa num bom cliente | **barato, mas não zero**: custo da ação + incômodo |
 
-**Exemplo ilustrativo** (valores hipotéticos, só para mostrar a ideia): um cliente deve NT$ 10.000. Se ele der calote, o banco perde 60% disso, NT$ 6.000. Uma ação preventiva custa NT$ 200. Então deixar passar **um** caloteiro custa o mesmo que incomodar **30** bons clientes. A regra "agir quando a chance de calote passar de 50%" ignora essa diferença; a regra certa é a que **minimiza o custo total**.
+**Exemplo:** um cliente deve NT$ 10.000. Se ele der calote, o banco perde 60% disso (NT$ 6.000). Com as premissas do projeto, agir nele compensa a partir de **19%** de chance de calote, e não de 50%. Se ele devesse só NT$ 2.000, o corte subiria para **62%**. O ponto de corte depende do valor em jogo de cada cliente.
 
 ### Por que "acurácia" engana aqui
 
-Nesta base, **22,12%** dos clientes deram calote. Um "modelo" que diz "ninguém vai dar calote" acerta **77,88%** das vezes, sem ajudar em nada. Por isso este projeto mede o sucesso em **dinheiro**.
+Um "modelo" que diz "ninguém vai dar calote" acerta **77,88%** das vezes, sem ajudar em nada. Os quatro modelos testados ficam entre 81,8% e 82,2% de acurácia, e o de maior acurácia não é o melhor. Por isso o projeto mede o sucesso em **dinheiro**.
 
 ---
 
 ## 2. O que o projeto entrega
 
-A entrega não é um número de acurácia. É uma **política de crédito para a carteira**, construída em camadas, do risco de cada cliente até a decisão do gestor:
+Uma **política de crédito para a carteira**, em camadas, do risco de cada cliente até a decisão do gestor:
 
-| Pergunta de negócio | O que o projeto produz | Status |
+| Pergunta de negócio | O que o projeto produz | Onde |
 |---|---|---|
-| Quem tem risco? | **probabilidade de calote** de cada cliente (*PD*), calibrada para ser uma chance real | ⏳ Etapas 9–13 |
-| Quanto isso custa? | **perda esperada** em dinheiro por cliente: chance × quanto deve × quanto se perderia | ⏳ Etapa 14 |
-| O que fazer com cada cliente? | **score de 0 a 1000** e **faixas de risco A–E**, cada uma com uma ação | ⏳ Etapa 14 |
-| Por que essa decisão? | os **3 principais motivos** de cada cliente, em frases ("2 meses de atraso no último pagamento") | ⏳ Etapa 15 |
-| Quando o modelo "envelhece"? | **monitoramento**: alarme quando os clientes novos ficam diferentes dos de treino | ⏳ Etapa 16 |
-| Como usar no dia a dia? | **API** que recebe os dados de um cliente e devolve score, faixa e motivos | ⏳ Etapa 17 |
-| Como o gestor decide? | **dashboard** com simuladores de custo, faixas e carteira | ⏳ Etapa 18 |
-
-**Como saberemos se funcionou** (critério fixado **antes** de ver os resultados): o modelo só será recomendado se der **mais resultado financeiro** do que (1) não agir em ninguém **e** (2) a melhor regra simples de atraso, como "agir em quem atrasou 2 meses". Se ele não vencer a regra simples, isso será documentado.
+| Quem tem risco? | **probabilidade de calote** (*PD*) de cada cliente | [`final.py`](src/credit_risk/final.py) |
+| Quanto isso custa? | **perda esperada** em dinheiro: chance × quanto deve × quanto se perderia | [`expected_loss.py`](src/credit_risk/expected_loss.py) |
+| O que fazer com cada cliente? | **score de 0 a 1000** e **faixas A–E**, cada uma com uma ação | [`scoring.py`](src/credit_risk/scoring.py) |
+| Por que essa decisão? | os **3 principais motivos** em frases ("2 meses de atraso no último pagamento") | [`reasons.py`](src/credit_risk/reasons.py) |
+| Quando o modelo "envelhece"? | **monitoramento** mensal com alarme | [`monitoring.py`](src/credit_risk/monitoring.py) |
+| Como usar no dia a dia? | **API** que devolve score, faixa e motivos | [`api/`](api/) |
+| Como o gestor decide? | **dashboard** com simuladores de custo, faixas e carteira | [`app/`](app/) |
 
 ---
 
-## 3. Os dados
+## 3. Arquitetura
 
-*Default of Credit Card Clients* (Yeh & Lien, 2009), do [UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/350/default+of+credit+card+clients), licença CC BY 4.0. São dados públicos e anonimizados.
+```mermaid
+flowchart LR
+    UCI[(UCI<br/>dataset 350)] -->|download +<br/>SHA-256| CLEAN[limpeza]
+    CLEAN --> SPLIT{separação}
+    SPLIT -->|80% treino| CV[features, modelos,<br/>tuning e política<br/>validação cruzada 5×3]
+    SPLIT -->|20% lacrado| HOLD[(holdout)]
+    CV --> FINAL[modelo final<br/>XGBoost]
+    HOLD -->|uma única vez| FINAL
+    FINAL --> SCORE[["scoring.py<br/>fonte única:<br/>PD → perda esperada →<br/>score → faixa → ação → motivos"]]
+    SCORE --> API[API FastAPI<br/>:8000]
+    SCORE --> APP[Dashboard Streamlit<br/>:8501]
+    SCORE --> MON[monitoramento<br/>PSI + indicadores]
+    MON -.->|todo dia 1º| GHA[GitHub Actions]
+```
+
+API, dashboard e avaliação passam pelo mesmo `scoring.py`: uma regra de negócio existe em **um só lugar**. O [relatório](docs/RELATORIO.md#320-arquitetura-e-como-seria-em-produção) mostra como a rotina mensal viraria uma DAG no Airflow numa operação maior.
+
+---
+
+## 4. Os dados
+
+*Default of Credit Card Clients* (Yeh & Lien, 2009), do [UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/350/default+of+credit+card+clients), licença CC BY 4.0. Dados públicos e anonimizados, baixados direto da fonte (sem login).
 
 | | |
 |---|---|
@@ -65,50 +102,39 @@ A entrega não é um número de acurácia. É uma **política de crédito para a
 | Alvo | o cliente deu calote em outubro de 2005? (sim/não) |
 | Inadimplentes | 6.636 (22,12%) |
 
-Ficha completa, com dicionário de variáveis e limitações: [`docs/data_card.md`](docs/data_card.md).
+Ficha completa: [`docs/data_card.md`](docs/data_card.md).
 
 ---
 
-## 4. O que já descobrimos
+## 5. Resultados, em ordem
 
-A análise exploratória (Etapa 5) usou **só os dados de treino** e testou cada relação com estatística. Com 24 mil clientes, quase tudo sai "estatisticamente significativo", por isso cada teste vem com o **tamanho do efeito**, que diz se a diferença é grande o bastante para importar.
+| # | Achado | O que muda para o negócio |
+|---|---|---|
+| 1 | **O atraso recente é o sinal mais forte.** Com 2 meses de atraso em setembro, **69%** deram calote em outubro (13% de quem pagou o mínimo) | o histórico de pagamento é a base do modelo |
+| 2 | **Uma suposição comum sobre estes dados estava errada:** o código -2 quer dizer "quitou a fatura", não "sem consumo" | a análise verificou a documentação em vez de aceitá-la |
+| 3 | **Três tipos de cliente** (PCA + K-means, sem usar o alvo): quitadores (16,7% de calote), rotativo em dia (18,8%) e atraso crônico (**62,4%**) | o risco vem do **atraso**, não do uso do rotativo |
+| 4 | **XGBoost × Árvore de Decisão × Random Forest × logística:** o XGBoost ajustado lidera (PR AUC 0,566, contra 0,22 sem modelo) | modelo de referência |
+| 5 | **Balancear classes, combinar modelos e calibrar não ajudaram** (critérios fixados antes) | sistema mais simples: XGBoost sozinho |
+| 6 | **O modelo não precisa de sexo, estado civil nem idade:** sem eles, desempenho e valor ficam iguais | fora do modelo; servem só para auditar |
+| 7 | **Em dinheiro, o modelo vence a regra de atraso:** +NT$ 7,7 mi no treino (+41%) e **+NT$ 2,36 mi no holdout (+46%)** | política oficial: 10% de maior valor esperado |
+| 8 | **A validação cruzada previu a prova final:** PR AUC 0,566 → 0,560 | o resultado não depende de sorte |
+| 9 | **A perda esperada acerta o tamanho da perda:** NT$ 39,4 mi previstos × NT$ 40,4 mi reais (−2,3%) | base para provisionar |
+| 10 | **Faixas A–E monotônicas:** calote de **6% (A)** → 14% → 20% → 38% → **71% (E)**, igual no treino e no holdout | cada faixa tem uma ação; a E concentra cerca de 40% da perda |
+| 11 | **Motivos em português por cliente:** "2 meses de atraso no último pagamento · atraso em 1 dos últimos 6 meses · usa 98% do limite" | o cliente e o analista entendem o porquê |
+| 12 | **Sem viés por sexo ou idade:** a PD erra no máximo 2,0 p.p. em qualquer grupo | auditoria de equidade aprovada |
+| 13 | **O índice padrão de estabilidade (PSI) não percebeu uma crise simulada**; PD média e participação da faixa E perceberam | monitoramento com PSI + indicadores de negócio |
 
-![Tamanho de efeito de cada variável](reports/figures/eda_07_resumo_efeitos.png)
+![Política com capacidade de 10%](reports/figures/decision_01_capacidade.png)
 
-| Achado | O que significa para o negócio |
-|---|---|
-| **O atraso recente é o sinal mais forte.** Com 2 meses de atraso em setembro, **69%** deram calote em outubro (contra 13% de quem pagou o mínimo) | o histórico de pagamento é a base do modelo; o mês mais recente vale mais que os antigos |
-| **Limite baixo, mais risco:** 32% de calote no quinto de clientes com menor limite e 13% no de maior | o limite entra no modelo, e também a utilização (fatura ÷ limite) |
-| **Quanto o cliente paga importa; o tamanho da fatura, não** | uma fatura de NT$ 50 mil diz pouco sozinha; ela precisa ser comparada com o limite e com o pagamento |
-| **Sexo, idade, escolaridade e estado civil mudam pouco o risco** | o perfil demográfico não deve guiar a política; usar ou não essas variáveis será decidido com uma checagem de equidade |
-| **Uma suposição comum sobre estes dados estava errada:** o código -2 não quer dizer "sem consumo", e sim "quitou a fatura" | o documento dos dados foi corrigido; a análise verificou a suposição em vez de aceitá-la |
-| **Três tipos de cliente** (Etapa 6, formados sem saber quem deu calote): **quitadores** (43%, 16,7% de calote), **rotativo em dia** (47%, 18,8%) e **atraso crônico** (10%, **62,4%**) | o risco vem do **atraso**, não do uso do rotativo: tratar o rotativo como risco cortaria receita sem reduzir perda |
-| **Os grupos não ajudam o modelo a prever** (ganho nulo nos dois modelos testados) | resultado negativo documentado: os grupos servem para **explicar** a carteira, não para prever |
-| **XGBoost e Random Forest empatam na frente** (Etapa 9): PR AUC 0,563 e 0,562, contra 0,22 de quem não sabe nada. A acurácia dos quatro modelos testados fica entre 81,8% e 82,2% e não serve para escolher | os dois seguem para o ajuste fino |
-| **Depois do ajuste fino, o XGBoost lidera sozinho** (Etapa 11): PR AUC 0,566. O ajuste rendeu pouco nos modelos fortes (+0,003) | XGBoost ajustado é o modelo de referência |
-| **Em dinheiro, o modelo vence a regra de atraso** (Etapa 12): acionando 10% da carteira por mês, escolher pelo valor esperado (chance de calote × dívida) gera **NT$ 26,7 milhões**, contra NT$ 19,0 milhões da regra "mais atrasados primeiro" (+41%; IC 95% da diferença: +6,3 a +9,2 mi). O modelo vence em todos os 12 cenários de premissas testados | política oficial: acionar os 10% de maior valor esperado |
-| **A perda esperada acerta o tamanho da perda** (Etapa 14): previu NT$ 39,4 mi de perda no holdout, contra NT$ 40,4 mi reais (−2,3%). Os 10% de clientes com maior perda esperada concentram 63% de toda a perda | base para provisionar e para priorizar ações |
-| **Score de 0 a 1000 e faixas A–E**: a taxa de calote sobe de **6% (A)** para 14%, 20%, 38% e **71% (E)**, igual no treino e na prova lacrada | cada faixa tem uma ação; a faixa E concentra 40% da perda |
-| **Cada decisão vem com motivos em português** (Etapa 15): ex. "2 meses de atraso no último pagamento · atraso em 1 dos últimos 6 meses · usa 98% do limite". Na faixa E, o 1º motivo é sempre o atraso | o cliente e o analista entendem o porquê |
-| **O alarme de "modelo envelhecendo" funciona** (Etapa 16): fica em silêncio na prova lacrada e dispara quando o público muda. Achado: o índice padrão do mercado (PSI) **não percebeu** uma crise simulada; dois indicadores de negócio (PD média e faixa E) perceberam | monitoramento mensal com PSI + indicadores complementares |
-| **Um bom modelo de risco sozinho não basta**: escolher só pela probabilidade de calote **perde** da regra de atraso. O ganho vem de combinar a probabilidade com o valor em jogo | base para a perda esperada e o score (Etapa 14) |
-| **Confirmado na prova lacrada** (Etapa 13): em 6.000 clientes nunca vistos, o desempenho ficou dentro do previsto pela validação cruzada (PR AUC 0,560) e a política gerou **+NT$ 2,36 milhões a mais que a regra de atraso** (+46%; IC 95%: +1,59 a +3,15 mi), evitando 18,6% da perda | o resultado não depende de sorte no treino |
-| **Sem viés detectado por sexo ou idade**: a probabilidade prevista erra no máximo 2,0 p.p. em qualquer grupo | auditoria de equidade aprovada |
-| **O modelo não precisa de sexo, estado civil nem idade** (Etapa 13): sem eles, o desempenho e o valor da política ficam iguais | o modelo final não usa esses dados; eles servem só para auditar a equidade |
-| **Combinar modelos não compensa**: os modelos erram nos mesmos clientes (correlação dos erros de até 0,998) e o melhor ensemble ganha +0,0009, menos que o ruído | modelo final: **XGBoost ajustado, sozinho** |
-| **"Balancear" as classes atrapalha** (Etapa 10): não melhora a detecção e faz o modelo prever, em média, 41% de chance de calote quando a taxa real é 22% | as probabilidades ficam confiáveis, o que é essencial para calcular a perda em dinheiro |
-| **Um mês de atraso recente dobra a chance de calote** (razão de chances 1,99); dobrar o limite reduz a chance em cerca de 16% | base para explicar cada decisão ao cliente |
-| **Resumir o histórico ajuda** (Etapa 7): "meses com atraso" é a variável mais forte do projeto; com 13 variáveis de resumo, a regressão logística melhorou em todas as 15 rodadas de teste | as variáveis de resumo entram no modelo |
-
-Detalhes: notebooks de [EDA](notebooks/01_eda_inferencia.ipynb) e de [segmentação](notebooks/02_segmentacao.ipynb), e o [relatório](docs/RELATORIO.md#3-modelagem).
+Detalhes e todos os números: [relatório](docs/RELATORIO.md) e notebooks de [EDA](notebooks/01_eda_inferencia.ipynb), [segmentação](notebooks/02_segmentacao.ipynb) e [modelagem e decisão](notebooks/03_modelagem_e_decisao.ipynb).
 
 ---
 
 ## Dashboard
 
-> 🔗 **Versão online:** [credit-risk-semantix.streamlit.app](https://credit-risk-semantix-vsjmawoelrtyrwzz49nnaa.streamlit.app/) (na primeira visita do dia, o app pode levar até 1 minuto para acordar e preparar os dados)
+> 🔗 **[Versão online](https://credit-risk-semantix-vsjmawoelrtyrwzz49nnaa.streamlit.app/)** (na primeira visita do dia, o app pode levar até 1 minuto para acordar e preparar os dados)
 
-Sete páginas, do problema à decisão, com controles para testar outras premissas de negócio e um simulador de cliente. Para rodar localmente: `make app`.
+Sete páginas, do problema à decisão, com controles para testar outras premissas de negócio e um simulador de cliente. Localmente: `make app`.
 
 | Mexa nas premissas e veja o valor do modelo | Simulador: score, faixa e motivos |
 |---|---|
@@ -116,44 +142,18 @@ Sete páginas, do problema à decisão, com controles para testar outras premiss
 
 ---
 
-## 5. Como o projeto garante resultados confiáveis
+## 6. Como o projeto garante resultados confiáveis
 
 | Cuidado | Por quê |
 |---|---|
-| **Prova final lacrada:** 20% dos clientes (6.000) separados no início e usados **uma única vez**, no fim | evita escolher o modelo "olhando a prova"; os IDs ficam em [`reports/holdout_ids.csv`](reports/holdout_ids.csv) para qualquer pessoa conferir |
-| **Critérios definidos antes dos experimentos** | evita ajustar a régua depois de ver o resultado |
-| **Dados verificados na entrada:** download direto da fonte oficial, com conferência da "impressão digital" do arquivo (SHA-256) e validação de colunas, tipos e faixas | se a fonte mudar, o processo para em vez de seguir com dados diferentes |
-| **Uma única fonte de verdade para as regras de negócio** | API, dashboard e avaliação usam o mesmo código de scoring (a partir da Etapa 14) |
-| **Testes automatizados** e verificação de código a cada commit | hoje: 215 testes, rodados automaticamente a cada push |
+| **Prova final lacrada:** 20% dos clientes (6.000) separados no início e usados **uma única vez** (`make final` se recusa a reavaliar) | evita escolher o modelo "olhando a prova"; os IDs estão em [`reports/holdout_ids.csv`](reports/holdout_ids.csv) |
+| **Critérios definidos antes de cada experimento** | evita ajustar a régua depois de ver o resultado; as 3 decisões tomadas depois estão registradas no relatório |
+| **Dados verificados na entrada:** conferência da "impressão digital" do arquivo (SHA-256) e validação de colunas, tipos e faixas | se a fonte mudar, o processo para |
+| **Uma única fonte de verdade para as regras de negócio** | API, dashboard e avaliação usam o mesmo `scoring.py` |
+| **Reprodução verificada:** `make docker-reproduce` reconstrói tudo do zero e compara as métricas do holdout | diferença obtida: **0,0** |
+| **215 testes automatizados** e verificação de código a cada push (GitHub Actions) | o selo "CI" no topo mostra o estado atual |
 
-**Decisão consciente:** a base tem 30 mil linhas e cabe na memória de qualquer computador. Por isso o projeto usa pandas e scikit-learn, e não ferramentas de big data (Spark, dbt), que só aumentariam a complexidade sem nenhum ganho. Pelo mesmo motivo, não há Airflow: o monitoramento é uma função (`run_monitoring`) que qualquer agendador pode chamar; aqui, um job mensal no GitHub Actions ([`monitor.yml`](.github/workflows/monitor.yml)). Em uma operação maior, essa mesma função seria uma tarefa de uma DAG no Airflow.
-
----
-
-## 6. Andamento
-
-| Etapa | Entrega | |
-|---|---|---|
-| 1 | Problema de negócio e repositório | ✅ |
-| 2 | Ambiente reprodutível (versões travadas, testes, verificação de código) | ✅ |
-| 3 | Coleta dos dados com verificação | ✅ |
-| 4 | Limpeza e separação da prova final (holdout) | ✅ |
-| 5 | Análise exploratória com inferência estatística | ✅ |
-| 6 | Segmentação de clientes (PCA + K-means) | ✅ |
-| 7 | Criação de variáveis | ✅ |
-| 8 | Pré-processamento | ✅ |
-| 9 | Duelo de modelos (logística × árvore × Random Forest × XGBoost) | ✅ |
-| 10 | Balanceamento de classes (resultado: não usar) | ✅ |
-| 11 | Ajuste fino e combinação de modelos | ✅ |
-| 12 | Calibração e política de decisão por custo | ✅ |
-| 13 | Avaliação final na prova lacrada | ✅ |
-| 14 | Perda esperada, score 0–1000 e faixas A–E | ✅ |
-| 15 | Motivos da decisão (SHAP) | ✅ |
-| 16 | Monitoramento de estabilidade (PSI + indicadores) | ✅ |
-| 17 | API de scoring (FastAPI) | ✅ |
-| 18 | Dashboard interativo (Streamlit) | ✅ |
-| 19 | Docker e integração contínua | ✅ |
-| 20–21 | Documentação final e entrega | ⏳ |
+**Decisões conscientes de simplicidade:** a base tem 30 mil linhas e cabe na memória de qualquer computador, então o projeto usa pandas e scikit-learn, e não Spark ou dbt. Também não há Airflow: o monitoramento é uma função (`run_monitoring`) que qualquer agendador pode chamar; aqui, um job mensal no GitHub Actions ([`monitor.yml`](.github/workflows/monitor.yml)).
 
 ---
 
@@ -167,7 +167,7 @@ cd credit-risk-semantix
 make up        # ou: docker compose up -d
 ```
 
-Na primeira vez, a API baixa os dados da UCI e treina o modelo (cerca de 1 minuto). Depois: API em http://localhost:8000/docs e dashboard em http://localhost:8501. `make down` desliga tudo. `make docker-reproduce` reconstrói tudo do zero e confere se as métricas da prova final batem com as publicadas.
+Na primeira vez, a API baixa os dados da UCI e treina o modelo (cerca de 1 minuto). Depois: API em http://localhost:8000/docs e dashboard em http://localhost:8501. `make down` desliga tudo.
 
 ### Local
 
@@ -177,24 +177,24 @@ Pré-requisitos: Linux, macOS ou WSL, com [`uv`](https://docs.astral.sh/uv/) e `
 git clone https://github.com/RToyoyama/credit-risk-semantix.git
 cd credit-risk-semantix
 
-make venv      # cria o ambiente com Python 3.11
-make install   # instala as versões exatas do requirements.lock
-make data      # baixa os dados da UCI, confere o SHA-256 e valida
-make split     # limpa os dados e separa treino / holdout
+make venv         # cria o ambiente com Python 3.11
+make install      # instala as versões exatas do requirements.lock
+make data         # baixa os dados da UCI, confere o SHA-256 e valida
+make split        # limpa os dados e separa treino / holdout
 make experiments  # roda os experimentos e salva os resultados em reports/
-make tune      # ajuste de hiperparâmetros (~10 min)
-make final     # treina o modelo final e avalia a prova lacrada (só roda uma vez)
-make monitor   # estabilidade do score e das variáveis (PSI) em lotes de clientes
-make api       # sobe a API em http://localhost:8000 (documentação em /docs)
-make app       # sobe o dashboard em http://localhost:8501
-make test      # roda os testes
+make tune         # ajuste de hiperparâmetros (~10 min)
+make final        # treina o modelo final e avalia a prova lacrada (só roda uma vez)
+make monitor      # estabilidade do score e das variáveis em lotes de clientes
+make api          # API em http://localhost:8000 (documentação em /docs)
+make app          # dashboard em http://localhost:8501
+make test         # testes
 ```
 
-`make help` lista todos os comandos.
+`make help` lista todos os comandos. Os notebooks usam o Python do `.venv` como kernel e leem os resultados salvos em `reports/` (para refazer os experimentos, `RERUN_EXPERIMENTS = True` no início do notebook 03).
 
 ### Exemplo: chamando a API
 
-Com a API no ar (`make api`), um cliente com 2 meses de atraso e fatura de NT$ 48,5 mil:
+Um cliente com 2 meses de atraso e fatura de NT$ 48,5 mil:
 
 ```bash
 curl -X POST http://localhost:8000/score -H "Content-Type: application/json" -d '{
@@ -221,8 +221,7 @@ Resposta (resumida):
 }
 ```
 
-A API **não aceita** sexo, estado civil nem idade (o modelo não usa esses dados; enviar um deles retorna erro 422). A documentação interativa fica em `http://localhost:8000/docs`.
- O notebook da EDA fica em `notebooks/01_eda_inferencia.ipynb` (use o Python do `.venv` como kernel).
+A API **não aceita** sexo, estado civil nem idade (o modelo não usa esses dados; enviar um deles retorna erro 422).
 
 ---
 
@@ -236,39 +235,40 @@ credit-risk-semantix/
 ├── data/                  # raw → interim → processed (gerados por make, fora do Git)
 ├── docs/
 │   ├── RELATORIO.md       # Coleta de dados | Modelagem | Conclusões
+│   ├── model_card.md      # ficha do modelo: uso, métricas, equidade, riscos
 │   ├── data_card.md       # ficha dos dados
-│   └── GLOSSARIO.md       # termos técnicos explicados de forma simples
+│   ├── GLOSSARIO.md       # termos técnicos explicados de forma simples
+│   └── images/            # capturas do dashboard
 ├── notebooks/
 │   ├── 01_eda_inferencia.ipynb
 │   ├── 02_segmentacao.ipynb
 │   └── 03_modelagem_e_decisao.ipynb
 ├── reports/
 │   ├── figures/           # gráficos gerados
-│   ├── eda_tests.csv      # resultado de todos os testes estatísticos
-│   ├── segment_*.csv      # escolha de k, perfis e experimento dos segmentos
-│   ├── *_experiment.csv   # resultados dos experimentos pareados
+│   ├── *.csv / *.json     # resultado de cada experimento
 │   └── holdout_ids.csv    # IDs da prova final lacrada
 ├── src/credit_risk/
-│   ├── config.py          # caminhos, seeds, schema e critérios
+│   ├── config.py          # caminhos, seeds, premissas de negócio e critérios
 │   ├── data.py            # download verificado e validação
 │   ├── cleaning.py        # limpeza com regras fixas
 │   ├── split.py           # separação do holdout
 │   ├── stats.py           # intervalos de confiança, testes e tamanhos de efeito
-│   ├── features.py        # features comportamentais e de resumo (regras fixas)
+│   ├── features.py        # variáveis de comportamento e de resumo
 │   ├── segmentation.py    # PCA + K-means e perfil dos segmentos
 │   ├── preprocessing.py   # escala e one-hot dentro do pipeline
-│   ├── models.py          # catálogo de modelos e pipeline completo
+│   ├── models.py          # catálogo de modelos e pipeline final
+│   ├── evaluate.py        # validação cruzada, KS, calibração e comparação pareada
 │   ├── balancing.py       # nenhum × pesos por classe × SMOTE
 │   ├── tuning.py          # busca de hiperparâmetros com semente separada
 │   ├── decision.py        # calibração e política de decisão por custo
+│   ├── explain.py         # VIF e razões de chances
 │   ├── final.py           # treino final e avaliação única no holdout
 │   ├── expected_loss.py   # perda esperada por cliente e carteira
 │   ├── scoring.py         # fonte única: PD → perda esperada → score → faixa → ação → motivos
 │   ├── reasons.py         # motivos da decisão por cliente (TreeSHAP)
 │   ├── monitoring.py      # PSI e indicadores de estabilidade por lote
 │   ├── artifacts.py       # reconstrói dados, modelo e previsões que faltarem
-│   ├── evaluate.py        # validação cruzada, KS, calibração e comparação pareada
-│   ├── explain.py         # VIF e razões de chances
+│   ├── reproduce.py       # confere se as métricas do holdout se reproduzem
 │   ├── experiments.py     # experimentos pareados (resultados em reports/)
 │   └── viz.py             # estilo padrão dos gráficos
 ├── tests/                 # testes automatizados
@@ -281,11 +281,14 @@ credit-risk-semantix/
 
 ---
 
-## 9. Documentação
+## 9. Lições aprendidas
 
-- [**Relatório**](docs/RELATORIO.md): problema, coleta de dados, modelagem e conclusões
-- [**Data card**](docs/data_card.md): fonte, licença, dicionário de variáveis e limitações
-- [**Glossário**](docs/GLOSSARIO.md): todo termo técnico do projeto explicado em linguagem simples
+- **Uma prova lacrada de verdade dá confiança.** No meu projeto anterior (Titanic), a validação dizia 0,85 e a realidade foi 0,78. Aqui, com o holdout separado no primeiro dia, a validação previu a prova final com diferença de 0,006.
+- **O objetivo é dinheiro, não métrica.** O modelo com a melhor probabilidade de calote empatou com uma regra simples até entrar o valor em jogo de cada cliente.
+- **Fixar o critério antes evita se enganar.** Balanceamento, ensemble, calibração e segmentos como variável foram rejeitados por regra, e o sistema ficou mais simples.
+- **Desconfiar da documentação dos dados.** O código -2 não significava o que se costuma supor.
+- **A métrica padrão do mercado pode falhar.** O PSI não viu uma crise simulada; indicadores de negócio viram.
+- **Olhar o produto pega erros que os testes não pegam.** As capturas do dashboard revelaram um cálculo errado; o deploy na nuvem revelou um erro de caminho que não aparecia localmente.
 
 ---
 
@@ -294,6 +297,17 @@ credit-risk-semantix/
 - Os dados são de **2005**, de **um único banco de Taiwan**. O método se transfere; o modelo treinado, não.
 - Não há renda, dívida total nem dados de birô de crédito, que um modelo real usaria.
 - Só há 6 meses de histórico e um único mês de desfecho, num período próximo à crise de cartões de Taiwan (2005–2006).
+- As premissas de negócio (perda de 60% no calote, eficácia da ação de 30%, custos) são referências, não medições. A conclusão resiste a elas (12 de 12 cenários), mas o valor em dinheiro depende delas.
+
+Lista completa e próximos passos: [Conclusões do relatório](docs/RELATORIO.md#4-conclusões).
+
+---
+
+## Autorização de uso (LGPD)
+
+Eu, **[NOME COMPLETO]**, portador(a) do RG **[RG]** e inscrito(a) no CPF **[CPF]**, autorizo a Semantix a utilizar este trabalho, desenvolvido no projeto de parceria EBAC × Semantix, para fins de avaliação no processo seletivo e de divulgação, nos termos da Lei nº 13.709/2018 (LGPD).
+
+> Os campos entre colchetes são **marcadores** e não devem ser preenchidos neste repositório público. Os dados pessoais são informados apenas no formulário de entrega da plataforma.
 
 ---
 
