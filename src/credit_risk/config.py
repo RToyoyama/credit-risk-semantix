@@ -1,9 +1,27 @@
 """Configuração central: caminhos, fonte dos dados, seeds e schema esperado."""
 
+import os
 from pathlib import Path
 
+
+def _find_root() -> Path:
+    """Raiz do projeto, onde ficam data/, models/ e reports/.
+
+    Ordem: variável ``CREDIT_RISK_ROOT``; a pasta acima de ``src/`` se tiver
+    ``pyproject.toml`` (instalação editável, uso local); senão, a pasta atual
+    (instalação comum, como no Streamlit Cloud, que roda a partir da raiz do
+    repositório).
+    """
+    if env := os.environ.get("CREDIT_RISK_ROOT"):
+        return Path(env).resolve()
+    candidate = Path(__file__).resolve().parents[2]
+    if (candidate / "pyproject.toml").exists():
+        return candidate
+    return Path.cwd().resolve()
+
+
 # ── Caminhos ────────────────────────────────────────────────
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = _find_root()
 DATA_DIR = ROOT / "data"
 RAW_DIR = DATA_DIR / "raw"
 INTERIM_DIR = DATA_DIR / "interim"

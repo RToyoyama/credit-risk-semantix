@@ -1,4 +1,4 @@
 # Usado pelo Streamlit Community Cloud (que lê este arquivo, não o .lock).
 # Instala as versões exatas do lock e o pacote do projeto.
 -r requirements.lock
-.
+-e .
