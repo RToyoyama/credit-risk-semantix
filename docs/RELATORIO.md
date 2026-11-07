@@ -512,7 +512,24 @@ Exemplo (faixa E): *"2 meses de atraso no último pagamento · atraso em 1 dos �
 
 **Orquestração:** aqui o agendador é um workflow `schedule` do GitHub Actions (Etapa 19). Em uma operação maior, a mesma função seria uma tarefa de uma DAG no Airflow; com um único job mensal e 30 mil clientes, o Airflow seria infraestrutura sem necessidade (decisão consciente).
 
-> TODO (Etapa 17).
+### 3.17 API de scoring (Etapa 17)
+
+Uma API (FastAPI) expõe o modelo para outros sistemas. Toda regra vem de `scoring.score_clients` (fonte única); a API só converte JSON em tabela e de volta.
+
+| Endpoint | Função |
+|---|---|
+| `GET /health` | verificação de vida (healthcheck do Docker) |
+| `GET /model-info` | versão, data de treino, métricas do holdout, variáveis excluídas, cortes das faixas e premissas |
+| `POST /score` | um cliente → PD, perda esperada, score, faixa, ação, prioridade e motivos |
+| `POST /score/batch` | até 1.000 clientes |
+
+- **Minimização de dados (LGPD):** o contrato de entrada recusa sexo, estado civil e idade (`extra="forbid"` → erro 422), porque o modelo não os usa.
+- **Validação:** status de -2 a 9, pagamentos ≥ 0, limite > 0, escolaridade de 1 a 4; violações retornam 422 com a explicação.
+- **Rastreabilidade:** toda resposta traz a versão do modelo e da API.
+- **Testes** (19, com um modelo pequeno treinado no próprio teste, para rodar no CI sem artefatos): contrato, 10 casos de entrada inválida, limites do lote e **consistência**: as respostas da API são idênticas às de `scoring.score_clients` para os mesmos clientes.
+- No servidor local, uma chamada leva cerca de 47 ms.
+
+> TODO (Etapas 18+).
 
 ## 4. Conclusões
 

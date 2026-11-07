@@ -132,3 +132,10 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | Cauda da distribuição | *distribution tail* | os extremos de uma distribuição; aqui, os clientes de maior risco, onde está a maior parte da perda | 16 |
 | Recalibrar × retreinar | *recalibration vs. retraining* | recalibrar = ajustar só as probabilidades do modelo atual (barato); retreinar = treinar o modelo de novo com dados novos (caro) | 16 |
 | Orquestrador | *orchestrator / scheduler* | ferramenta que agenda e encadeia tarefas automáticas (ex.: cron, GitHub Actions, Airflow) | 16 |
+| API | *Application Programming Interface* | uma "janela de atendimento" pela qual outro sistema envia dados e recebe respostas, sem precisar saber como o modelo funciona por dentro | 17 |
+| Endpoint | *endpoint* | cada "guichê" da API, com um endereço e uma função (ex.: `/score`) | 17 |
+| JSON | *JavaScript Object Notation* | formato de texto simples para trocar dados entre sistemas, como `{"limit_bal": 50000}` | 17 |
+| Contrato | *schema / contract* | a definição exata dos campos que a API aceita e devolve, com tipos e limites | 17 |
+| Erro 422 | *HTTP 422 Unprocessable Entity* | a resposta da API quando os dados enviados não respeitam o contrato (campo faltando, valor fora da faixa, campo proibido) | 17 |
+| Swagger / OpenAPI | *OpenAPI docs* | a documentação interativa gerada automaticamente pela API, em `/docs`, onde dá para testar as chamadas no navegador | 17 |
+| Princípio da necessidade | *data minimization (LGPD)* | coletar só os dados pessoais estritamente necessários para a finalidade | 17 |

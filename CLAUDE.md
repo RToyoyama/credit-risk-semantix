@@ -124,7 +124,7 @@ Sempre: `git add -A && pre-commit run --all-files; git add -A` antes do commit (
 ═══════════════════════════════════════
 
 - **Python 3.11** (via `uv`), pandas, numpy, scikit-learn, xgboost, imbalanced-learn, scipy, statsmodels, matplotlib, seaborn, plotly, streamlit, joblib, shap, fastapi, uvicorn, pydantic (v2), python-calamine (ler o `.xls` da UCI; `xlrd` está depreciado no pandas 3.1).
-- Dev: ruff, pytest, pre-commit, ipykernel, httpx (para o `TestClient` do FastAPI).
+- Dev: ruff, pytest, pre-commit, ipykernel, httpx2 (para o `TestClient` do FastAPI; o Starlette depreciou o `httpx` nesse uso), nbformat e nbclient (execução headless dos notebooks).
 - `snake_case`, **type hints obrigatórios**, docstrings no **padrão Google**.
 - Arquitetura de dados em camadas: `raw → interim (limpo) → processed (features)`, mais `reports/` para resultados.
 - Não usar PySpark/dbt/Airflow: 30 mil linhas cabem em memória. Justifique isso no README como decisão consciente, não como lacuna.

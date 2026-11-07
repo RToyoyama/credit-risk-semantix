@@ -109,7 +109,7 @@ Detalhes: notebooks de [EDA](notebooks/01_eda_inferencia.ipynb) e de [segmentaç
 | **Critérios definidos antes dos experimentos** | evita ajustar a régua depois de ver o resultado |
 | **Dados verificados na entrada:** download direto da fonte oficial, com conferência da "impressão digital" do arquivo (SHA-256) e validação de colunas, tipos e faixas | se a fonte mudar, o processo para em vez de seguir com dados diferentes |
 | **Uma única fonte de verdade para as regras de negócio** | API, dashboard e avaliação usam o mesmo código de scoring (a partir da Etapa 14) |
-| **Testes automatizados** e verificação de código a cada commit | hoje: 181 testes |
+| **Testes automatizados** e verificação de código a cada commit | hoje: 202 testes |
 
 **Decisão consciente:** a base tem 30 mil linhas e cabe na memória de qualquer computador. Por isso o projeto usa pandas e scikit-learn, e não ferramentas de big data (Spark, dbt), que só aumentariam a complexidade sem nenhum ganho. Pelo mesmo motivo, não há Airflow: o monitoramento é uma função (`run_monitoring`) que qualquer agendador pode chamar; aqui, um job mensal no GitHub Actions. Em uma operação maior, essa mesma função seria uma tarefa de uma DAG no Airflow.
 
@@ -135,7 +135,8 @@ Detalhes: notebooks de [EDA](notebooks/01_eda_inferencia.ipynb) e de [segmentaç
 | 14 | Perda esperada, score 0–1000 e faixas A–E | ✅ |
 | 15 | Motivos da decisão (SHAP) | ✅ |
 | 16 | Monitoramento de estabilidade (PSI + indicadores) | ✅ |
-| 17–19 | API, dashboard, Docker e integração contínua | ⏳ |
+| 17 | API de scoring (FastAPI) | ✅ |
+| 18–19 | Dashboard, Docker e integração contínua | ⏳ |
 | 20–21 | Documentação final e entrega | ⏳ |
 
 ---
@@ -156,10 +157,43 @@ make experiments  # roda os experimentos e salva os resultados em reports/
 make tune      # ajuste de hiperparâmetros (~10 min)
 make final     # treina o modelo final e avalia a prova lacrada (só roda uma vez)
 make monitor   # estabilidade do score e das variáveis (PSI) em lotes de clientes
+make api       # sobe a API em http://localhost:8000 (documentação em /docs)
 make test      # roda os testes
 ```
 
-`make help` lista todos os comandos. O notebook da EDA fica em `notebooks/01_eda_inferencia.ipynb` (use o Python do `.venv` como kernel).
+`make help` lista todos os comandos.
+
+### Exemplo: chamando a API
+
+Com a API no ar (`make api`), um cliente com 2 meses de atraso e fatura de NT$ 48,5 mil:
+
+```bash
+curl -X POST http://localhost:8000/score -H "Content-Type: application/json" -d '{
+  "id": 101, "limit_bal": 50000, "education": 2,
+  "pay_status_1": 2, "pay_status_2": 2, "pay_status_3": 0, "pay_status_4": 0, "pay_status_5": 0, "pay_status_6": 0,
+  "bill_amt_1": 48500, "bill_amt_2": 47000, "bill_amt_3": 46200, "bill_amt_4": 30000, "bill_amt_5": 28000, "bill_amt_6": 25000,
+  "pay_amt_1": 0, "pay_amt_2": 1500, "pay_amt_3": 2000, "pay_amt_4": 1500, "pay_amt_5": 1000, "pay_amt_6": 1000
+}'
+```
+
+Resposta (resumida):
+
+```json
+{
+  "pd": 0.611, "score": 352, "faixa": "E",
+  "acao": "candidato prioritário a ação preventiva", "prioritario": true,
+  "perda_esperada": 17783.42,
+  "motivos": [
+    "2 meses de atraso no último pagamento",
+    "atraso em 2 dos últimos 6 meses (pior atraso: 2 meses)",
+    "comportamento de pagamento: pagou 0% da fatura anterior"
+  ],
+  "versao_modelo": "0.1.0", "versao_api": "1.0"
+}
+```
+
+A API **não aceita** sexo, estado civil nem idade (o modelo não usa esses dados; enviar um deles retorna erro 422). A documentação interativa fica em `http://localhost:8000/docs`.
+ O notebook da EDA fica em `notebooks/01_eda_inferencia.ipynb` (use o Python do `.venv` como kernel).
 
 ---
 
@@ -167,6 +201,7 @@ make test      # roda os testes
 
 ```
 credit-risk-semantix/
+├── api/                   # API de scoring (FastAPI): contratos e endpoints
 ├── data/                  # raw → interim → processed (gerados por make, fora do Git)
 ├── docs/
 │   ├── RELATORIO.md       # Coleta de dados | Modelagem | Conclusões
