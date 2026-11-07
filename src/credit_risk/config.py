@@ -201,3 +201,13 @@ MODEL_EXCLUDE: list[str] = [
     "marriage",
     "age",
 ]  # Etapa 13A: removidos sem perda (não inferioridade)
+
+# ── Avaliação final (Etapa 13B) ─────────────────────────────
+FINAL_MODEL_PATH = MODELS_DIR / "final_model.joblib"
+MODEL_METADATA = MODELS_DIR / "model_metadata.json"
+HOLDOUT_PREDICTIONS = PROCESSED_DIR / "holdout_predictions.parquet"
+HOLDOUT_METRICS = REPORTS_DIR / "holdout_metrics.csv"  # existe = holdout já usado
+FAIRNESS_CALIBRATION_GAP = 0.03  # alerta se |PD média − taxa real| > 3 p.p. num grupo
+FAIRNESS_AUC_GAP = 0.05  # alerta se o ROC AUC variar mais que isso entre grupos
+AGE_BANDS = [20, 30, 45, 80]  # 21–30, 31–45, 46+ (só auditoria; idade não entra no modelo)
+PERMUTATION_REPEATS = 10

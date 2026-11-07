@@ -114,3 +114,7 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | Não inferioridade | *non-inferiority* | critério que aceita uma mudança se ela não piorar o resultado além de uma margem combinada antes. Útil quando a mudança tem outro benefício (aqui, ético) | 13 |
 | Equidade | *fairness* | verificar se o modelo funciona e decide de forma parecida para grupos diferentes (ex.: homens e mulheres) | 13 |
 | Fonte única de verdade | *single source of truth* | um único lugar no código define a regra (aqui, o modelo oficial), e todas as partes o usam, sem cópias que possam divergir | 13 |
+| Importância por permutação | *permutation importance* | embaralhar uma variável entre os clientes e medir quanto o modelo piora. Se piora muito, ele dependia dela | 13 |
+| Dependência parcial | *partial dependence plot (PDP)* | mudar uma variável para o mesmo valor em todos os clientes e ver a PD média; mostra o "formato" do efeito | 13 |
+| Matriz de confusão | *confusion matrix* | tabela que cruza a decisão (acionado ou não) com o que aconteceu (calote ou não) | 13 |
+| Variável proxy | *proxy variable* | uma variável que, sem ser sensível, anda junto com um atributo sensível e pode reproduzir uma discriminação de forma indireta | 13 |

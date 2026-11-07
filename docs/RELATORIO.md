@@ -395,7 +395,48 @@ Usar sexo ou estado civil para decidir sobre crédito é eticamente questionáve
 
 **Decisão:** o modelo final **não usa sexo, estado civil nem idade** (`config.MODEL_EXCLUDE`); a escolha ética não tem custo. Esses dados ficam só para **auditar** a equidade no holdout. O modelo oficial é `models.final_pipeline()`, usado em toda a decisão; os números das Seções 3.9 e 3.10 já foram recalculados com ele.
 
-> TODO (Etapas 13B–17).
+### 3.12 Avaliação final no holdout (Etapa 13, Parte B)
+
+O modelo oficial foi treinado nos 24.000 clientes de treino e avaliado **uma única vez** nos 6.000 do holdout (`make final`, que se recusa a reavaliar se as métricas já existirem). Critérios fixados antes de abrir:
+
+| Critério | Resultado | |
+|---|---|---|
+| PR AUC do holdout dentro da faixa da CV (média ± 1,96 desvio) | **0,560** (IC 0,531–0,589); faixa 0,542–0,590 | ✅ |
+| Política de 10%: valor esperado vence a regra de atraso (IC > 0) | **+NT$ 2,36 mi** (IC 1,59–3,15), **+46%** | ✅ |
+| Equidade: calibração por grupo ≤ 3 p.p.; ROC AUC varia ≤ 0,05 | 2,0 p.p. e 0,014 | ✅ |
+
+![CV x holdout](../reports/figures/final_01_cv_vs_holdout.png)
+
+| Métrica | Holdout (IC 95%) | CV (média) |
+|---|---|---|
+| PR AUC | 0,560 (0,531–0,589) | 0,566 |
+| ROC AUC | 0,782 (0,767–0,796) | 0,788 |
+| KS | 0,427 (0,402–0,457) | 0,441 |
+| Brier | 0,134 (0,129–0,140) | 0,133 |
+
+**A validação cruzada previu bem o desempenho em clientes nunca vistos**: o PR AUC do holdout ficou 0,006 abaixo da média da CV. A lição do projeto anterior (CV 0,85 → realidade 0,78) não se repetiu.
+
+**Política no holdout** (600 clientes acionados; perda total sem ação: NT$ 40,4 mi): valor esperado NT$ 7,52 mi × regra de atraso NT$ 5,17 mi. A política evita 18,6% da perda total. Dos 600 acionados, 296 dariam calote e 304 pagariam. Ordenar só pela PD empatou com a regra (−NT$ 0,15 mi; IC −0,36 a +0,01), o que reforça: o ganho vem de combinar PD e exposição.
+
+**Equidade (auditoria; sexo e idade não entram no modelo):**
+
+| Grupo | Taxa real | PD média | Diferença | ROC AUC | % acionados |
+|---|---|---|---|---|---|
+| Feminino | 21,3% | 21,6% | +0,4 p.p. | 0,786 | 9,4% |
+| Masculino | 23,4% | 22,7% | −0,6 p.p. | 0,774 | 10,8% |
+| 21–30 anos | 22,0% | 23,2% | +1,2 p.p. | 0,790 | 9,1% |
+| 31–45 anos | 21,2% | 20,8% | −0,3 p.p. | 0,776 | 10,7% |
+| 46+ anos | 25,3% | 23,2% | −2,0 p.p. | 0,781 | 9,9% |
+
+A diferença de acionamento entre os sexos acompanha a taxa real de calote. **Limite:** esta é uma auditoria de resultados; ela não descarta discriminação indireta via variáveis correlacionadas com o grupo (*proxies*), como o limite de crédito.
+
+**Interpretabilidade global:** o atraso de setembro domina (embaralhá-lo derruba o PR AUC em 0,20); sexo, estado civil e idade têm importância exatamente zero. Na dependência parcial, a PD média fica em ≈ 18% para status ≤ 0, vai a 23% com 1 mês de atraso e salta para ≈ 56% com 2 meses; com o limite, cai de forma contínua (25% com NT$ 20 mil → 19% com NT$ 500 mil).
+
+![Dependência parcial](../reports/figures/final_04_pdp.png)
+
+**Por segmento:** o modelo ordena pior **dentro** do atraso crônico (ROC AUC 0,68 contra 0,73–0,74 nos demais) e subestima o risco desse grupo em 3,8 p.p.
+
+> TODO (Etapas 14–17).
 
 ## 4. Conclusões
 

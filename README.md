@@ -85,6 +85,8 @@ A análise exploratória (Etapa 5) usou **só os dados de treino** e testou cada
 | **Depois do ajuste fino, o XGBoost lidera sozinho** (Etapa 11): PR AUC 0,566. O ajuste rendeu pouco nos modelos fortes (+0,003) | XGBoost ajustado é o modelo de referência |
 | **Em dinheiro, o modelo vence a regra de atraso** (Etapa 12): acionando 10% da carteira por mês, escolher pelo valor esperado (chance de calote × dívida) gera **NT$ 26,7 milhões**, contra NT$ 19,0 milhões da regra "mais atrasados primeiro" (+41%; IC 95% da diferença: +6,3 a +9,2 mi). O modelo vence em todos os 12 cenários de premissas testados | política oficial: acionar os 10% de maior valor esperado |
 | **Um bom modelo de risco sozinho não basta**: escolher só pela probabilidade de calote **perde** da regra de atraso. O ganho vem de combinar a probabilidade com o valor em jogo | base para a perda esperada e o score (Etapa 14) |
+| **Confirmado na prova lacrada** (Etapa 13): em 6.000 clientes nunca vistos, o desempenho ficou dentro do previsto pela validação cruzada (PR AUC 0,560) e a política gerou **+NT$ 2,36 milhões a mais que a regra de atraso** (+46%; IC 95%: +1,59 a +3,15 mi), evitando 18,6% da perda | o resultado não depende de sorte no treino |
+| **Sem viés detectado por sexo ou idade**: a probabilidade prevista erra no máximo 2,0 p.p. em qualquer grupo | auditoria de equidade aprovada |
 | **O modelo não precisa de sexo, estado civil nem idade** (Etapa 13): sem eles, o desempenho e o valor da política ficam iguais | o modelo final não usa esses dados; eles servem só para auditar a equidade |
 | **Combinar modelos não compensa**: os modelos erram nos mesmos clientes (correlação dos erros de até 0,998) e o melhor ensemble ganha +0,0009, menos que o ruído | modelo final: **XGBoost ajustado, sozinho** |
 | **"Balancear" as classes atrapalha** (Etapa 10): não melhora a detecção e faz o modelo prever, em média, 41% de chance de calote quando a taxa real é 22% | as probabilidades ficam confiáveis, o que é essencial para calcular a perda em dinheiro |
@@ -103,7 +105,7 @@ Detalhes: notebooks de [EDA](notebooks/01_eda_inferencia.ipynb) e de [segmentaç
 | **Critérios definidos antes dos experimentos** | evita ajustar a régua depois de ver o resultado |
 | **Dados verificados na entrada:** download direto da fonte oficial, com conferência da "impressão digital" do arquivo (SHA-256) e validação de colunas, tipos e faixas | se a fonte mudar, o processo para em vez de seguir com dados diferentes |
 | **Uma única fonte de verdade para as regras de negócio** | API, dashboard e avaliação usam o mesmo código de scoring (a partir da Etapa 14) |
-| **Testes automatizados** e verificação de código a cada commit | hoje: 146 testes |
+| **Testes automatizados** e verificação de código a cada commit | hoje: 150 testes |
 
 **Decisão consciente:** a base tem 30 mil linhas e cabe na memória de qualquer computador. Por isso o projeto usa pandas e scikit-learn, e não ferramentas de big data (Spark, dbt, Airflow), que só aumentariam a complexidade sem nenhum ganho.
 
@@ -125,7 +127,7 @@ Detalhes: notebooks de [EDA](notebooks/01_eda_inferencia.ipynb) e de [segmentaç
 | 10 | Balanceamento de classes (resultado: não usar) | ✅ |
 | 11 | Ajuste fino e combinação de modelos | ✅ |
 | 12 | Calibração e política de decisão por custo | ✅ |
-| 13 | Avaliação final na prova lacrada | ⏳ |
+| 13 | Avaliação final na prova lacrada | ✅ |
 | 14–16 | Perda esperada, score e faixas, motivos, monitoramento | ⏳ |
 | 17–19 | API, dashboard, Docker e integração contínua | ⏳ |
 | 20–21 | Documentação final e entrega | ⏳ |
@@ -146,6 +148,7 @@ make data      # baixa os dados da UCI, confere o SHA-256 e valida
 make split     # limpa os dados e separa treino / holdout
 make experiments  # roda os experimentos e salva os resultados em reports/
 make tune      # ajuste de hiperparâmetros (~10 min)
+make final     # treina o modelo final e avalia a prova lacrada (só roda uma vez)
 make test      # roda os testes
 ```
 
@@ -185,6 +188,7 @@ credit-risk-semantix/
 │   ├── balancing.py       # nenhum × pesos por classe × SMOTE
 │   ├── tuning.py          # busca de hiperparâmetros com semente separada
 │   ├── decision.py        # calibração e política de decisão por custo
+│   ├── final.py           # treino final e avaliação única no holdout
 │   ├── evaluate.py        # validação cruzada, KS, calibração e comparação pareada
 │   ├── explain.py         # VIF e razões de chances
 │   ├── experiments.py     # experimentos pareados (resultados em reports/)

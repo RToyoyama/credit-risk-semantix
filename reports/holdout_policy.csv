@@ -1,0 +1,4 @@
+política,acionados,pct_acionados,calotes_alcancados,pct_calotes_alcancados,valor,perda_sem_acao
+maior valor esperado (modelo),600,0.1,296,0.22305953278070836,7521343.739999999,40357787.4
+maior PD (modelo),600,0.1,423,0.31876412961567446,5012130.18,40357787.4
+regra de atraso (sem modelo),600,0.1,413,0.31122833458929916,5165200.619999999,40357787.4
