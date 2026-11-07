@@ -8,4 +8,4 @@ def test_python_version_is_311():
 
 
 def test_package_exposes_version():
-    assert credit_risk.__version__ == "0.1.0"
+    assert credit_risk.__version__ == "1.0.0"

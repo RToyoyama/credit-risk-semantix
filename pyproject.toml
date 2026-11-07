@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "credit-risk"
-version = "0.1.0"
+version = "1.0.0"
 description = "Risco de crédito orientado a custo: PD calibrada, perda esperada, score, faixas A–E, API e dashboard."
 readme = "README.md"
 requires-python = ">=3.11,<3.12"

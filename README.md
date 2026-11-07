@@ -217,7 +217,7 @@ Resposta (resumida):
     "atraso em 2 dos últimos 6 meses (pior atraso: 2 meses)",
     "comportamento de pagamento: pagou 0% da fatura anterior"
   ],
-  "versao_modelo": "0.1.0", "versao_api": "1.0"
+  "versao_modelo": "1.0.0", "versao_api": "1.0"
 }
 ```
 
