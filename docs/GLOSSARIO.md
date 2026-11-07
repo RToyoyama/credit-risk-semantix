@@ -139,3 +139,6 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | Erro 422 | *HTTP 422 Unprocessable Entity* | a resposta da API quando os dados enviados não respeitam o contrato (campo faltando, valor fora da faixa, campo proibido) | 17 |
 | Swagger / OpenAPI | *OpenAPI docs* | a documentação interativa gerada automaticamente pela API, em `/docs`, onde dá para testar as chamadas no navegador | 17 |
 | Princípio da necessidade | *data minimization (LGPD)* | coletar só os dados pessoais estritamente necessários para a finalidade | 17 |
+| Dashboard | *dashboard* | painel interativo que mostra os resultados com gráficos e controles, para quem decide explorar cenários sem programar | 18 |
+| Streamlit | *Streamlit* | biblioteca Python que transforma um script em um site interativo | 18 |
+| Cache | *cache* | guardar um resultado já calculado para não refazer a conta a cada clique (aqui, o modelo e os dados) | 18 |

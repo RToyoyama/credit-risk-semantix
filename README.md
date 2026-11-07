@@ -6,6 +6,8 @@
 ![Status: em construção](https://img.shields.io/badge/status-em%20constru%C3%A7%C3%A3o-orange)
 
 > Projeto de parceria **EBAC × Semantix**. Em construção: esta página mostra o que já está pronto e o que vem a seguir.
+>
+> 🔗 **Dashboard online:** https://credit-risk-semantix-vsjmawoelrtyrwzz49nnaa.streamlit.app/
 
 **Em uma frase:** um sistema que ajuda uma emissora de cartão de crédito a decidir, todo mês, **em quais clientes agir antes que eles deixem de pagar**, escolhendo a decisão pelo **dinheiro em jogo**, e não pela taxa de acerto.
 
@@ -101,6 +103,18 @@ Detalhes: notebooks de [EDA](notebooks/01_eda_inferencia.ipynb) e de [segmentaç
 
 ---
 
+## Dashboard
+
+> 🔗 **Versão online:** [credit-risk-semantix.streamlit.app](https://credit-risk-semantix-vsjmawoelrtyrwzz49nnaa.streamlit.app/) (na primeira visita do dia, o app pode levar até 1 minuto para acordar e preparar os dados)
+
+Sete páginas, do problema à decisão, com controles para testar outras premissas de negócio e um simulador de cliente. Para rodar localmente: `make app`.
+
+| Mexa nas premissas e veja o valor do modelo | Simulador: score, faixa e motivos |
+|---|---|
+| ![Decisão](docs/images/dashboard_04_decisao.png) | ![Simulador](docs/images/dashboard_07_simulador.png) |
+
+---
+
 ## 5. Como o projeto garante resultados confiáveis
 
 | Cuidado | Por quê |
@@ -109,7 +123,7 @@ Detalhes: notebooks de [EDA](notebooks/01_eda_inferencia.ipynb) e de [segmentaç
 | **Critérios definidos antes dos experimentos** | evita ajustar a régua depois de ver o resultado |
 | **Dados verificados na entrada:** download direto da fonte oficial, com conferência da "impressão digital" do arquivo (SHA-256) e validação de colunas, tipos e faixas | se a fonte mudar, o processo para em vez de seguir com dados diferentes |
 | **Uma única fonte de verdade para as regras de negócio** | API, dashboard e avaliação usam o mesmo código de scoring (a partir da Etapa 14) |
-| **Testes automatizados** e verificação de código a cada commit | hoje: 202 testes |
+| **Testes automatizados** e verificação de código a cada commit | hoje: 212 testes |
 
 **Decisão consciente:** a base tem 30 mil linhas e cabe na memória de qualquer computador. Por isso o projeto usa pandas e scikit-learn, e não ferramentas de big data (Spark, dbt), que só aumentariam a complexidade sem nenhum ganho. Pelo mesmo motivo, não há Airflow: o monitoramento é uma função (`run_monitoring`) que qualquer agendador pode chamar; aqui, um job mensal no GitHub Actions. Em uma operação maior, essa mesma função seria uma tarefa de uma DAG no Airflow.
 
@@ -136,7 +150,8 @@ Detalhes: notebooks de [EDA](notebooks/01_eda_inferencia.ipynb) e de [segmentaç
 | 15 | Motivos da decisão (SHAP) | ✅ |
 | 16 | Monitoramento de estabilidade (PSI + indicadores) | ✅ |
 | 17 | API de scoring (FastAPI) | ✅ |
-| 18–19 | Dashboard, Docker e integração contínua | ⏳ |
+| 18 | Dashboard interativo (Streamlit) | ✅ |
+| 19 | Docker e integração contínua | ⏳ |
 | 20–21 | Documentação final e entrega | ⏳ |
 
 ---
@@ -158,6 +173,7 @@ make tune      # ajuste de hiperparâmetros (~10 min)
 make final     # treina o modelo final e avalia a prova lacrada (só roda uma vez)
 make monitor   # estabilidade do score e das variáveis (PSI) em lotes de clientes
 make api       # sobe a API em http://localhost:8000 (documentação em /docs)
+make app       # sobe o dashboard em http://localhost:8501
 make test      # roda os testes
 ```
 
@@ -202,6 +218,7 @@ A API **não aceita** sexo, estado civil nem idade (o modelo não usa esses dado
 ```
 credit-risk-semantix/
 ├── api/                   # API de scoring (FastAPI): contratos e endpoints
+├── app/                   # dashboard (Streamlit): 7 páginas
 ├── data/                  # raw → interim → processed (gerados por make, fora do Git)
 ├── docs/
 │   ├── RELATORIO.md       # Coleta de dados | Modelagem | Conclusões
@@ -235,6 +252,7 @@ credit-risk-semantix/
 │   ├── scoring.py         # fonte única: PD → perda esperada → score → faixa → ação → motivos
 │   ├── reasons.py         # motivos da decisão por cliente (TreeSHAP)
 │   ├── monitoring.py      # PSI e indicadores de estabilidade por lote
+│   ├── artifacts.py       # reconstrói dados, modelo e previsões que faltarem
 │   ├── evaluate.py        # validação cruzada, KS, calibração e comparação pareada
 │   ├── explain.py         # VIF e razões de chances
 │   ├── experiments.py     # experimentos pareados (resultados em reports/)

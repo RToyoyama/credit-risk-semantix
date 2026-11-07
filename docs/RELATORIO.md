@@ -529,7 +529,27 @@ Uma API (FastAPI) expõe o modelo para outros sistemas. Toda regra vem de `scori
 - **Testes** (19, com um modelo pequeno treinado no próprio teste, para rodar no CI sem artefatos): contrato, 10 casos de entrada inválida, limites do lote e **consistência**: as respostas da API são idênticas às de `scoring.score_clients` para os mesmos clientes.
 - No servidor local, uma chamada leva cerca de 47 ms.
 
-> TODO (Etapas 18+).
+### 3.18 Dashboard (Etapa 18)
+
+O dashboard (Streamlit) conta a história do projeto para o gestor e permite **explorar cenários**. Ele usa as mesmas funções da API e da avaliação (`scoring.py`, `decision.py`): nenhuma regra de negócio é duplicada.
+
+| Página | Conteúdo |
+|---|---|
+| 1. O problema | quanto a inadimplência custa, o ganho do modelo no holdout e uma calculadora do valor de agir para um cliente |
+| 2. O que os dados revelam | atraso, limite, a armadilha da acurácia e o tamanho de efeito de todas as variáveis |
+| 3. Os segmentos | quitadores, rotativo em dia e atraso crônico |
+| 4. O modelo e a decisão | controles de LGD, eficácia, custos e capacidade recalculando o valor do modelo × regra de atraso × "só PD" na carteira de exemplo (holdout); com as premissas padrão, reproduz exatamente o resultado da Seção 3.12 |
+| 5. A carteira por faixa | tabela de política A–E, perda esperada × real e concentração da perda |
+| 6. Monitoramento | PSI e indicadores de cada lote |
+| 7. Simulador de cliente | formulário → score, faixa, ação e motivos (não pede sexo, estado civil nem idade) |
+
+![Dashboard: o modelo e a decisão](images/dashboard_04_decisao.png)
+
+**Reprodutibilidade na nuvem:** dados e modelo não estão no Git. Na primeira visita, `artifacts.ensure_artifacts()` baixa os dados da UCI, refaz a limpeza e o split (com os IDs lacrados do holdout) e treina o modelo. Num ambiente zerado, isso levou cerca de 8 s, e as previsões ficaram **idênticas** às originais (diferença máxima de PD = 0,0).
+
+**Revisão visual:** cada página foi capturada (Chromium headless) e revisada. As capturas pegaram erros que os testes automáticos não pegariam, entre eles um **ponto de equilíbrio calculado errado** (20% em vez de 19%), agora coberto por um teste.
+
+> TODO (Etapas 19+).
 
 ## 4. Conclusões
 

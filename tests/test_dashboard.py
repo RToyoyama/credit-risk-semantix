@@ -28,7 +28,18 @@ def test_money_and_markdown_helpers():
 
 
 @needs_data
-@pytest.mark.parametrize("page", ["page_problem.py", "page_data.py", "page_segments.py"])
+@pytest.mark.parametrize(
+    "page",
+    [
+        "page_problem.py",
+        "page_data.py",
+        "page_segments.py",
+        "page_decision.py",
+        "page_portfolio.py",
+        "page_monitoring.py",
+        "page_simulator.py",
+    ],
+)
 def test_pages_run_without_exceptions(page):
     from streamlit.testing.v1 import AppTest
 
@@ -44,3 +55,15 @@ def test_problem_page_breakeven_matches_decision_module():
     at = AppTest.from_file(str(APP / "page_problem.py"), default_timeout=180).run()
     text = " ".join(m.value for m in at.markdown)
     assert "**19%**" in text
+
+
+@needs_data
+def test_decision_page_defaults_reproduce_holdout_result():
+    import pandas as pd
+    from streamlit.testing.v1 import AppTest
+
+    at = AppTest.from_file(str(APP / "page_decision.py"), default_timeout=180).run()
+    policy = pd.read_csv(config.REPORTS_DIR / "holdout_policy.csv").set_index("política")
+    expected = policy.loc["maior valor esperado (modelo)", "valor"] / 1e6
+    shown = next(m.value for m in at.metric if m.label == "Perda evitada pelo modelo")
+    assert shown == f"NT$ {expected:.1f} mi".replace(".", ",")
