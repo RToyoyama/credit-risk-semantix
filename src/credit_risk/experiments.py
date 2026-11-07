@@ -608,6 +608,52 @@ def expected_loss_experiment() -> pd.DataFrame:
     return summary
 
 
+def scoring_experiment() -> pd.DataFrame:
+    """Etapa 14B: cortes das faixas no OOF do treino; validação no treino e no holdout.
+
+    Critérios: taxa de default crescente de A para E (sem inversão) nas duas
+    bases e distribuição por faixa no holdout a no máximo
+    ``config.BAND_SHIFT_MAX`` da do treino.
+
+    Returns:
+        Tabela de política por base e faixa (``reports/score_bands.csv``).
+    """
+    from statsmodels.stats.proportion import proportion_confint
+
+    from credit_risk.scoring import fit_scoring_params, save_params, score_from_pd
+
+    oof = pd.read_parquet(config.OOF_PREDICTIONS)
+    params = fit_scoring_params(oof["pd"].to_numpy(), oof["ead"].to_numpy())
+    save_params(params)
+    tables = []
+    for name, b in {
+        "treino (OOF)": oof,
+        "holdout": pd.read_parquet(config.HOLDOUT_PREDICTIONS),
+    }.items():
+        s = score_from_pd(b["pd"].to_numpy(), b["ead"].to_numpy(), params)
+        s["y"] = b[config.TARGET].to_numpy()
+        s["perda_real"] = config.LGD * s["ead"] * s["y"]
+        g = s.groupby("faixa").agg(
+            clientes=("y", "size"),
+            calotes=("y", "sum"),
+            score_min=("score", "min"),
+            score_max=("score", "max"),
+            pd_media=("pd", "mean"),
+            perda_esperada=("perda_esperada", "sum"),
+            perda_real=("perda_real", "sum"),
+            prioritarios=("prioritario", "sum"),
+        )
+        g["participacao"] = g["clientes"] / len(s)
+        g["taxa_default"] = g["calotes"] / g["clientes"]
+        low, high = proportion_confint(g["calotes"], g["clientes"], method="wilson")
+        g["ic_inf"], g["ic_sup"] = low, high
+        g["acao"] = g.index.map(config.BAND_ACTIONS)
+        tables.append(g.reset_index().assign(base=name))
+    out = pd.concat(tables, ignore_index=True)
+    out.to_csv(config.REPORTS_DIR / "score_bands.csv", index=False)
+    return out
+
+
 EXPERIMENTS = {
     "feature_experiment": feature_experiment,
     "status_category_experiment": status_category_experiment,
@@ -621,6 +667,7 @@ EXPERIMENTS = {
     "capacity_experiment": capacity_experiment,
     "sensitive_experiment": sensitive_experiment,
     "expected_loss_experiment": expected_loss_experiment,
+    "scoring_experiment": scoring_experiment,
 }
 
 

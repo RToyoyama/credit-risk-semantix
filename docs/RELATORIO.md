@@ -452,7 +452,30 @@ A diferença de acionamento entre os sexos acompanha a taxa real de calote. **Li
 - Os 5% de maior EL concentram 43% da perda real; os 20% de maior EL, 77%.
 - Sensibilidade: EL total de NT$ 112,8 / 150,4 / 188,0 mi com LGD de 45% / 60% / 75% (a ordem dos clientes não muda).
 
-> TODO (Etapas 14B–17).
+### 3.14 Score de 0 a 1000 e faixas de risco A–E (Etapa 14, Parte B)
+
+`scoring.py` é a **fonte única** da cadeia PD → perda esperada → score → faixa → ação, usada pela avaliação, pela API e pelo dashboard.
+
+**Escala:** `score = 500 + (60 ÷ ln 2) × ln(chance de pagar ÷ 3,5)`, em que 3,5 : 1 é a chance média da carteira (PD 22,1%). **PDO = 60**: a cada +60 pontos, a chance de pagar dobra (PD 22,1% → 500; 12,4% → 560; 6,6% → 620). Na prática, os scores ficam entre ≈ 266 e 656.
+
+**Faixas** (cortes nos quantis do score OOF do treino; salvos em [`reports/scoring_params.json`](../reports/scoring_params.json)) e **prioridade de ação** (valor esperado ≥ NT$ 4.513, o corte equivalente à capacidade de 10% no treino):
+
+| Faixa | Score | Ação | Default (treino) | Default (holdout) | Perda real (holdout) | Prioritários (holdout) |
+|---|---|---|---|---|---|---|
+| A | 575–656 | elegível a aumento de limite e ofertas | 6,2% | 6,3% | NT$ 3,9 mi | 16 |
+| B | 532–574 | relacionamento padrão | 13,6% | 14,2% | NT$ 7,5 mi | 112 |
+| C | 479–531 | relacionamento padrão, com monitoramento | 20,0% | 20,0% | NT$ 6,4 mi | 98 |
+| D | 375–478 | monitoramento próximo | 38,4% | 38,0% | NT$ 5,1 mi | 102 |
+| E | 266–374 | candidato prioritário a ação preventiva | 71,3% | 70,4% | NT$ 17,5 mi | 319 |
+
+![Faixas](../reports/figures/score_01_faixas.png)
+
+- **Monotonicidade ✅** no treino e no holdout, com intervalos de confiança de faixas vizinhas sem sobreposição.
+- **Estabilidade ✅:** a participação de cada faixa no holdout difere no máximo 0,9 p.p. da do treino (limite: 3).
+- A faixa E (10% dos clientes) concentra cerca de 40% da perda real.
+- **Faixa e prioridade se complementam:** a faixa mede o risco; a prioridade mede onde a ação rende mais. Há clientes prioritários até na faixa B (risco moderado, dívidas grandes).
+
+> TODO (Etapas 15–17).
 
 ## 4. Conclusões
 

@@ -120,3 +120,7 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | Variável proxy | *proxy variable* | uma variável que, sem ser sensível, anda junto com um atributo sensível e pode reproduzir uma discriminação de forma indireta | 13 |
 | Provisão | *loan loss provision* | dinheiro que o banco reserva para cobrir as perdas que espera ter com calotes | 14 |
 | Curva de concentração | *concentration / gains curve* | mostra que fração da perda é coberta olhando só os x% clientes mais prioritários | 14 |
+| Chance (odds) | *odds* | razão entre a probabilidade de algo acontecer e a de não acontecer. PD de 20% → chance de pagar de 80 : 20 = 4 : 1 | 14 |
+| Log-odds | *log-odds / logit* | o logaritmo da chance. Transforma "dobrar a chance" numa soma fixa de pontos, por isso é a base dos scores de crédito | 14 |
+| PDO | *points to double the odds* | quantos pontos de score fazem a chance de pagar dobrar. Aqui, 60 | 14 |
+| Monotonicidade | *monotonicity* | quando uma grandeza só sobe (ou só desce) ao longo de uma ordem. Aqui: a taxa de default sobe de A para E, sem inversões | 14 |

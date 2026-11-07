@@ -211,3 +211,19 @@ FAIRNESS_CALIBRATION_GAP = 0.03  # alerta se |PD média − taxa real| > 3 p.p. 
 FAIRNESS_AUC_GAP = 0.05  # alerta se o ROC AUC variar mais que isso entre grupos
 AGE_BANDS = [20, 30, 45, 80]  # 21–30, 31–45, 46+ (só auditoria; idade não entra no modelo)
 PERMUTATION_REPEATS = 10
+
+# ── Score e faixas (Etapa 14B) ──────────────────────────────
+SCORE_ANCHOR = 500  # score da PD média da carteira
+SCORE_ANCHOR_PD = 0.2212  # taxa de default do treino (Etapa 4)
+SCORE_PDO = 60  # pontos para dobrar a chance de pagar
+SCORE_RANGE = (0, 1000)
+BAND_SHARES: dict[str, float] = {"A": 0.30, "B": 0.25, "C": 0.20, "D": 0.15, "E": 0.10}
+BAND_ACTIONS: dict[str, str] = {
+    "A": "elegível a aumento de limite e ofertas",
+    "B": "relacionamento padrão",
+    "C": "relacionamento padrão, com monitoramento",
+    "D": "monitoramento próximo",
+    "E": "candidato prioritário a ação preventiva",
+}
+SCORING_PARAMS = REPORTS_DIR / "scoring_params.json"  # cortes definidos no OOF do treino
+BAND_SHIFT_MAX = 0.03  # estabilidade: distribuição por faixa no holdout a no máximo 3 p.p.
