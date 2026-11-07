@@ -493,7 +493,26 @@ Para cada cliente, `reasons.py` devolve até **3 motivos**: os conceitos de neg�
 
 Exemplo (faixa E): *"2 meses de atraso no último pagamento · atraso em 1 dos últimos 6 meses (pior atraso: 2 meses) · usa 98% do limite"*.
 
-> TODO (Etapas 16–17).
+### 3.16 Monitoramento (Etapa 16)
+
+`monitoring.py` compara cada lote de clientes com a população de treino. **PSI** (*Population Stability Index*): soma, faixa a faixa, (atual − referência) × ln(atual ÷ referência); < 0,10 estável, 0,10–0,25 atenção, > 0,25 investigar. A referência (decis, categorias e proporções) foi definida **uma vez com o treino** (score e PD fora do fold) e salva em [`reports/monitoring_reference.json`](../reports/monitoring_reference.json). `run_monitoring(lote)` é a tarefa que um agendador chama todo mês; `make monitor` gera [`reports/monitoring.json`](../reports/monitoring.json).
+
+| Lote | PSI do score | PD média ÷ referência | Faixa E ÷ referência | Status |
+|---|---|---|---|---|
+| Holdout (mesma população) | 0,002 | 1,00 | 1,03 | **estável** ✅ |
+| Só clientes até 25 anos | 0,18 (atenção; idade, limite e fatura > 0,25) | 1,25 | 1,62 | investigar |
+| Só limite até NT$ 50 mil | 1,30 | 1,43 | 1,87 | investigar |
+| Crise (atrasados de 22% para 36%) | **0,066** | **1,23** | **1,69** | investigar (só pelos indicadores) |
+
+![Monitoramento](../reports/figures/monitor_01_cenarios.png)
+
+**Limitação do PSI (resultado contra o esperado):** na crise, o PSI ficou "estável". Ele mede a forma da distribuição inteira em 10 faixas, e uma mudança concentrada na **cauda de maior risco** se dilui na soma. Como essa cauda é onde está a perda, foram acrescentados, **depois de ver este resultado** (decisão registrada), dois **indicadores complementares** com limites de negócio: PD média > 1,2× a referência (a provisão ficaria mais de 20% defasada) e fração na faixa E > 1,5× a referência (a capacidade de ação foi dimensionada para cerca de 10%). A validação real desses limites depende de lotes reais.
+
+**Rotina em produção:** todo mês, um agendador chama `run_monitoring` com o lote do mês. "Atenção" → revisão das variáveis que mudaram; "investigar" → congelar mudanças de política, comparar a PD prevista com o default real quando ele chegar e decidir entre **recalibrar** (barato) e **retreinar** (caro). Quando os desfechos chegam, monitora-se também o desempenho (PR AUC, calibração por faixa, valor da política).
+
+**Orquestração:** aqui o agendador é um workflow `schedule` do GitHub Actions (Etapa 19). Em uma operação maior, a mesma função seria uma tarefa de uma DAG no Airflow; com um único job mensal e 30 mil clientes, o Airflow seria infraestrutura sem necessidade (decisão consciente).
+
+> TODO (Etapa 17).
 
 ## 4. Conclusões
 

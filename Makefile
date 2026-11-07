@@ -2,7 +2,7 @@
 PY := .venv/bin/python
 BIN := .venv/bin
 
-.PHONY: help venv install lock data split experiments tune final lint format test check hooks clean
+.PHONY: help venv install lock data split experiments tune final monitor lint format test check hooks clean
 
 help: ## Lista os comandos disponíveis
 	@grep -E '^[a-z_-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
@@ -33,6 +33,9 @@ tune: ## Ajusta hiperparâmetros (seed de busca separada) e salva best_params.js
 
 final: ## Treina o modelo final e avalia o holdout UMA vez (recusa rodar de novo)
 	$(PY) -m credit_risk.final
+
+monitor: ## PSI do holdout e de cenários de drift; gera reports/monitoring.json
+	$(PY) -m credit_risk.monitoring
 
 lint: ## Verifica o código com ruff (sem alterar)
 	$(BIN)/ruff check .

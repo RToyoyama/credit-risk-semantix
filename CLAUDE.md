@@ -128,6 +128,7 @@ Sempre: `git add -A && pre-commit run --all-files; git add -A` antes do commit (
 - `snake_case`, **type hints obrigatórios**, docstrings no **padrão Google**.
 - Arquitetura de dados em camadas: `raw → interim (limpo) → processed (features)`, mais `reports/` para resultados.
 - Não usar PySpark/dbt/Airflow: 30 mil linhas cabem em memória. Justifique isso no README como decisão consciente, não como lacuna.
+- **Orquestração (decidido na Etapa 16):** sem Airflow no projeto. `monitoring.run_monitoring(lote)` é independente de orquestrador; o agendamento real é um workflow `schedule` (cron mensal) no GitHub Actions (Etapa 19); o relatório traz o desenho (Mermaid) de como seria uma DAG Airflow em produção (Etapa 20).
 
 **Configuração do ruff (aprendida no projeto anterior):**
 ```toml

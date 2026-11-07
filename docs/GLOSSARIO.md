@@ -127,3 +127,8 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | SHAP | *SHapley Additive exPlanations* | divide a previsão de um cliente em contribuições de cada variável, como dividir a conta de um jantar pelo que cada um consumiu. Risco médio + soma das contribuições = risco do cliente | 15 |
 | TreeSHAP | *TreeSHAP* | a versão exata e rápida do SHAP para modelos de árvores | 15 |
 | Materialidade | *materiality threshold* | o tamanho mínimo para algo ser considerado relevante. Aqui, um fator só vira motivo se aumentar a chance de calote em pelo menos ≈ 5% | 15 |
+| Monitoramento de drift | *drift monitoring* | acompanhar se os clientes novos continuam parecidos com os de treino; se mudarem, o modelo pode errar sem avisar | 16 |
+| PSI | *Population Stability Index* | mede o quanto a distribuição de uma variável mudou entre duas épocas: soma de (atual − referência) × ln(atual ÷ referência) nas faixas. < 0,10 estável; > 0,25 investigar | 16 |
+| Cauda da distribuição | *distribution tail* | os extremos de uma distribuição; aqui, os clientes de maior risco, onde está a maior parte da perda | 16 |
+| Recalibrar × retreinar | *recalibration vs. retraining* | recalibrar = ajustar só as probabilidades do modelo atual (barato); retreinar = treinar o modelo de novo com dados novos (caro) | 16 |
+| Orquestrador | *orchestrator / scheduler* | ferramenta que agenda e encadeia tarefas automáticas (ex.: cron, GitHub Actions, Airflow) | 16 |

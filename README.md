@@ -87,6 +87,7 @@ A análise exploratória (Etapa 5) usou **só os dados de treino** e testou cada
 | **A perda esperada acerta o tamanho da perda** (Etapa 14): previu NT$ 39,4 mi de perda no holdout, contra NT$ 40,4 mi reais (−2,3%). Os 10% de clientes com maior perda esperada concentram 63% de toda a perda | base para provisionar e para priorizar ações |
 | **Score de 0 a 1000 e faixas A–E**: a taxa de calote sobe de **6% (A)** para 14%, 20%, 38% e **71% (E)**, igual no treino e na prova lacrada | cada faixa tem uma ação; a faixa E concentra 40% da perda |
 | **Cada decisão vem com motivos em português** (Etapa 15): ex. "2 meses de atraso no último pagamento · atraso em 1 dos últimos 6 meses · usa 98% do limite". Na faixa E, o 1º motivo é sempre o atraso | o cliente e o analista entendem o porquê |
+| **O alarme de "modelo envelhecendo" funciona** (Etapa 16): fica em silêncio na prova lacrada e dispara quando o público muda. Achado: o índice padrão do mercado (PSI) **não percebeu** uma crise simulada; dois indicadores de negócio (PD média e faixa E) perceberam | monitoramento mensal com PSI + indicadores complementares |
 | **Um bom modelo de risco sozinho não basta**: escolher só pela probabilidade de calote **perde** da regra de atraso. O ganho vem de combinar a probabilidade com o valor em jogo | base para a perda esperada e o score (Etapa 14) |
 | **Confirmado na prova lacrada** (Etapa 13): em 6.000 clientes nunca vistos, o desempenho ficou dentro do previsto pela validação cruzada (PR AUC 0,560) e a política gerou **+NT$ 2,36 milhões a mais que a regra de atraso** (+46%; IC 95%: +1,59 a +3,15 mi), evitando 18,6% da perda | o resultado não depende de sorte no treino |
 | **Sem viés detectado por sexo ou idade**: a probabilidade prevista erra no máximo 2,0 p.p. em qualquer grupo | auditoria de equidade aprovada |
@@ -108,9 +109,9 @@ Detalhes: notebooks de [EDA](notebooks/01_eda_inferencia.ipynb) e de [segmentaç
 | **Critérios definidos antes dos experimentos** | evita ajustar a régua depois de ver o resultado |
 | **Dados verificados na entrada:** download direto da fonte oficial, com conferência da "impressão digital" do arquivo (SHA-256) e validação de colunas, tipos e faixas | se a fonte mudar, o processo para em vez de seguir com dados diferentes |
 | **Uma única fonte de verdade para as regras de negócio** | API, dashboard e avaliação usam o mesmo código de scoring (a partir da Etapa 14) |
-| **Testes automatizados** e verificação de código a cada commit | hoje: 172 testes |
+| **Testes automatizados** e verificação de código a cada commit | hoje: 181 testes |
 
-**Decisão consciente:** a base tem 30 mil linhas e cabe na memória de qualquer computador. Por isso o projeto usa pandas e scikit-learn, e não ferramentas de big data (Spark, dbt, Airflow), que só aumentariam a complexidade sem nenhum ganho.
+**Decisão consciente:** a base tem 30 mil linhas e cabe na memória de qualquer computador. Por isso o projeto usa pandas e scikit-learn, e não ferramentas de big data (Spark, dbt), que só aumentariam a complexidade sem nenhum ganho. Pelo mesmo motivo, não há Airflow: o monitoramento é uma função (`run_monitoring`) que qualquer agendador pode chamar; aqui, um job mensal no GitHub Actions. Em uma operação maior, essa mesma função seria uma tarefa de uma DAG no Airflow.
 
 ---
 
@@ -133,7 +134,7 @@ Detalhes: notebooks de [EDA](notebooks/01_eda_inferencia.ipynb) e de [segmentaç
 | 13 | Avaliação final na prova lacrada | ✅ |
 | 14 | Perda esperada, score 0–1000 e faixas A–E | ✅ |
 | 15 | Motivos da decisão (SHAP) | ✅ |
-| 16 | Monitoramento | ⏳ |
+| 16 | Monitoramento de estabilidade (PSI + indicadores) | ✅ |
 | 17–19 | API, dashboard, Docker e integração contínua | ⏳ |
 | 20–21 | Documentação final e entrega | ⏳ |
 
@@ -154,6 +155,7 @@ make split     # limpa os dados e separa treino / holdout
 make experiments  # roda os experimentos e salva os resultados em reports/
 make tune      # ajuste de hiperparâmetros (~10 min)
 make final     # treina o modelo final e avalia a prova lacrada (só roda uma vez)
+make monitor   # estabilidade do score e das variáveis (PSI) em lotes de clientes
 make test      # roda os testes
 ```
 
@@ -197,6 +199,7 @@ credit-risk-semantix/
 │   ├── expected_loss.py   # perda esperada por cliente e carteira
 │   ├── scoring.py         # fonte única: PD → perda esperada → score → faixa → ação → motivos
 │   ├── reasons.py         # motivos da decisão por cliente (TreeSHAP)
+│   ├── monitoring.py      # PSI e indicadores de estabilidade por lote
 │   ├── evaluate.py        # validação cruzada, KS, calibração e comparação pareada
 │   ├── explain.py         # VIF e razões de chances
 │   ├── experiments.py     # experimentos pareados (resultados em reports/)

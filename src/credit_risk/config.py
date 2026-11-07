@@ -249,3 +249,23 @@ NO_REASON_TEXT = "sem fatores de risco relevantes"
 # Materialidade (decidida após ver os motivos da faixa A): um fator só vira motivo se
 # aumentar a chance de calote em >= ~5% (exp(0,05) = 1,05). Afeta só a apresentação.
 MIN_REASON_CONTRIBUTION = 0.05
+
+# ── Monitoramento (Etapa 16) ────────────────────────────────
+PSI_BINS = 10
+PSI_EPSILON = 1e-4  # evita log(0) em faixas vazias
+PSI_THRESHOLDS = {"atenção": 0.10, "investigar": 0.25}
+MONITORED_NUMERIC = [
+    "score",
+    "pd",
+    "util_recent",
+    "pay_ratio_recent",
+    "bill_amt_1",
+    "limit_bal",
+    "age",
+]
+MONITORED_CATEGORICAL = ["pay_status_1", "delay_months"]
+MONITORING_REFERENCE = REPORTS_DIR / "monitoring_reference.json"
+MONITORING_REPORT = REPORTS_DIR / "monitoring.json"
+# Indicadores complementares (definidos após o PSI não detectar o cenário de crise):
+PD_MEAN_RATIO_MAX = 1.20  # PD média do lote > 1,2x a de referência: provisão >20% defasada
+BAND_E_RATIO_MAX = 1.50  # fração na faixa E > 1,5x a de referência: capacidade estoura
