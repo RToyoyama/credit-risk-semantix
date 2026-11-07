@@ -1,0 +1,4 @@
+modelo,estrategia,ganho_pr_auc,win_rate_pr_auc,ganho_brier,win_rate_brier,pr_auc_ok,brier_ok,adotar
+xgboost,stacking_xgb_rf_logit,0.0008564758266110361,0.7333333333333333,-0.0006618409725496137,0.13333333333333333,True,False,False
+xgboost,voting_xgb_rf,0.00018775489284379444,0.4666666666666667,0.00010770519590532583,0.6,False,True,False
+xgboost,voting_xgb_rf_logit,0.0008823623550867706,0.6,0.00012332766774442912,0.7333333333333333,False,True,False

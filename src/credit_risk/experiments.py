@@ -22,7 +22,7 @@ from credit_risk.evaluate import (
     reliability_table,
     summarize,
 )
-from credit_risk.models import CATALOG, build_pipeline
+from credit_risk.models import CATALOG, ENSEMBLES, build_ensemble, build_pipeline
 from credit_risk.preprocessing import make_feature_pipeline
 from credit_risk.split import load_train
 
@@ -241,12 +241,68 @@ def balancing_calibration() -> pd.DataFrame:
     return out
 
 
+DIVERSITY_MODELS = ["xgboost", "random_forest", "logistic", "decision_tree"]
+
+
+def ensemble_diversity() -> pd.DataFrame:
+    """Etapa 11B: correlação entre os erros out-of-fold dos modelos ajustados.
+
+    Erro = alvo − probabilidade prevista. Correlação perto de 1 significa que
+    os modelos erram nos mesmos clientes, e combiná-los ajuda pouco.
+
+    Returns:
+        Matriz de correlação (salva em ``reports/ensemble_diversity.csv``).
+    """
+    df = load_train()
+    X, y = df.drop(columns=[config.TARGET]), df[config.TARGET]
+    errors = pd.DataFrame(
+        {
+            m: y.to_numpy() - oof_predictions(build_pipeline(m, tuned=True), X, y)
+            for m in DIVERSITY_MODELS
+        }
+    )
+    corr = errors.corr()
+    corr.to_csv(config.REPORTS_DIR / "ensemble_diversity.csv")
+    return corr
+
+
+def ensemble_experiment() -> pd.DataFrame:
+    """Etapa 11B: cada ensemble contra o XGBoost ajustado, nos mesmos folds.
+
+    Returns:
+        Decisão com veto da calibração (salva em ``reports/``).
+    """
+    df = load_train()
+    X, y = df.drop(columns=[config.TARGET]), df[config.TARGET]
+    base = cv_scores(build_pipeline("xgboost", tuned=True), X, y)
+    rows = []
+    for name in ENSEMBLES:
+        cand = cv_scores(build_ensemble(name), X, y)
+        for metric in ["pr_auc", "roc_auc", "ks", "brier"]:
+            rows.append(
+                {
+                    "modelo": "xgboost",
+                    "estrategia": name,
+                    "métrica": metric,
+                    **paired_comparison(base, cand, metric),
+                }
+            )
+        logger.info("Ensemble: %s concluído", name)
+    comparisons = pd.DataFrame(rows)
+    comparisons.to_csv(config.REPORTS_DIR / "ensemble_experiment.csv", index=False)
+    decision = decide_with_calibration(comparisons)
+    decision.to_csv(config.REPORTS_DIR / "ensemble_decision.csv", index=False)
+    return decision
+
+
 EXPERIMENTS = {
     "feature_experiment": feature_experiment,
     "status_category_experiment": status_category_experiment,
     "model_duel": model_duel,
     "balancing_experiment": balancing_experiment,
     "balancing_calibration": balancing_calibration,
+    "ensemble_diversity": ensemble_diversity,
+    "ensemble_experiment": ensemble_experiment,
 }
 
 

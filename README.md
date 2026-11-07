@@ -83,6 +83,7 @@ A análise exploratória (Etapa 5) usou **só os dados de treino** e testou cada
 | **Os grupos não ajudam o modelo a prever** (ganho nulo nos dois modelos testados) | resultado negativo documentado: os grupos servem para **explicar** a carteira, não para prever |
 | **XGBoost e Random Forest empatam na frente** (Etapa 9): PR AUC 0,563 e 0,562, contra 0,22 de quem não sabe nada. A acurácia dos quatro modelos testados fica entre 81,8% e 82,2% e não serve para escolher | os dois seguem para o ajuste fino |
 | **Depois do ajuste fino, o XGBoost lidera sozinho** (Etapa 11): PR AUC 0,566. O ajuste rendeu pouco nos modelos fortes (+0,003) | XGBoost ajustado é o modelo de referência |
+| **Combinar modelos não compensa**: os modelos erram nos mesmos clientes (correlação dos erros de até 0,998) e o melhor ensemble ganha +0,0009, menos que o ruído | modelo final: **XGBoost ajustado, sozinho** |
 | **"Balancear" as classes atrapalha** (Etapa 10): não melhora a detecção e faz o modelo prever, em média, 41% de chance de calote quando a taxa real é 22% | as probabilidades ficam confiáveis, o que é essencial para calcular a perda em dinheiro |
 | **Um mês de atraso recente dobra a chance de calote** (razão de chances 1,99); dobrar o limite reduz a chance em cerca de 16% | base para explicar cada decisão ao cliente |
 | **Resumir o histórico ajuda** (Etapa 7): "meses com atraso" é a variável mais forte do projeto; com 13 variáveis de resumo, a regressão logística melhorou em todas as 15 rodadas de teste | as variáveis de resumo entram no modelo |
@@ -99,7 +100,7 @@ Detalhes: notebooks de [EDA](notebooks/01_eda_inferencia.ipynb) e de [segmentaç
 | **Critérios definidos antes dos experimentos** | evita ajustar a régua depois de ver o resultado |
 | **Dados verificados na entrada:** download direto da fonte oficial, com conferência da "impressão digital" do arquivo (SHA-256) e validação de colunas, tipos e faixas | se a fonte mudar, o processo para em vez de seguir com dados diferentes |
 | **Uma única fonte de verdade para as regras de negócio** | API, dashboard e avaliação usam o mesmo código de scoring (a partir da Etapa 14) |
-| **Testes automatizados** e verificação de código a cada commit | hoje: 127 testes |
+| **Testes automatizados** e verificação de código a cada commit | hoje: 130 testes |
 
 **Decisão consciente:** a base tem 30 mil linhas e cabe na memória de qualquer computador. Por isso o projeto usa pandas e scikit-learn, e não ferramentas de big data (Spark, dbt, Airflow), que só aumentariam a complexidade sem nenhum ganho.
 
@@ -119,7 +120,7 @@ Detalhes: notebooks de [EDA](notebooks/01_eda_inferencia.ipynb) e de [segmentaç
 | 8 | Pré-processamento | ✅ |
 | 9 | Duelo de modelos (logística × árvore × Random Forest × XGBoost) | ✅ |
 | 10 | Balanceamento de classes (resultado: não usar) | ✅ |
-| 11 | Ajuste fino e combinação de modelos | ⏳ |
+| 11 | Ajuste fino e combinação de modelos | ✅ |
 | 12 | Calibração e política de decisão por custo | ⏳ |
 | 13 | Avaliação final na prova lacrada | ⏳ |
 | 14–16 | Perda esperada, score e faixas, motivos, monitoramento | ⏳ |

@@ -34,3 +34,23 @@ def test_tree_model_keeps_status_numeric_and_unscaled(clean_big):
 
 def test_factory_returns_new_instances():
     assert CATALOG["xgboost"].factory() is not CATALOG["xgboost"].factory()
+
+
+@pytest.mark.parametrize("name", ["voting_xgb_rf", "stacking_xgb_rf_logit"])
+def test_ensembles_fit_and_return_probabilities(clean_big, name):
+    from credit_risk.models import build_ensemble
+
+    model = build_ensemble(name).fit(clean_big, clean_big[config.TARGET])
+    proba = model.predict_proba(clean_big)[:, 1]
+    assert ((proba >= 0) & (proba <= 1)).all()
+
+
+def test_soft_voting_is_mean_of_members(clean_big):
+    import numpy as np
+
+    from credit_risk.models import build_ensemble
+
+    y = clean_big[config.TARGET]
+    vote = build_ensemble("voting_xgb_rf").fit(clean_big, y)
+    members = [est.predict_proba(clean_big)[:, 1] for est in vote.estimators_]
+    assert np.allclose(vote.predict_proba(clean_big)[:, 1], np.mean(members, axis=0))

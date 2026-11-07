@@ -98,3 +98,7 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | Otimismo da busca | *selection bias / optimistic bias* | a nota do melhor candidato de uma busca é inflada pela sorte, como ficar com o maior de 60 dados. Mede-se reavaliando o escolhido em folds que a busca não viu | 11 |
 | Regularização | *regularization* | um "freio" que impede o modelo de dar pesos exagerados às variáveis. Na logística, `C` pequeno = freio forte | 11 |
 | Taxa de aprendizado | *learning rate* | no XGBoost, o tamanho do passo de cada nova árvore ao corrigir as anteriores. Passos menores pedem mais árvores, mas costumam generalizar melhor | 11 |
+| Combinação de modelos | *ensemble* | juntar as previsões de vários modelos numa só, na esperança de que os erros de um sejam compensados pelos acertos de outro | 11 |
+| Diversidade | *diversity* | o quanto os modelos erram em clientes diferentes. Sem diversidade, combinar não ajuda | 11 |
+| Votação soft | *soft voting* | combinação que tira a média das probabilidades dos modelos | 11 |
+| Stacking | *stacking* | combinação em que um modelo "chefe" aprende quanto confiar em cada modelo, usando previsões feitas em dados que eles não viram | 11 |

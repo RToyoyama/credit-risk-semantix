@@ -306,7 +306,25 @@ Busca com **Grid** (logística: 7 valores de `C`; árvore: 24 combinações) e *
 
 Hiperparâmetros adotados: [`reports/best_params.json`](../reports/best_params.json).
 
-> TODO (Etapas 11B–17).
+### 3.8 Combinação de modelos (Etapa 11, Parte B)
+
+Uma combinação (*ensemble*) só ajuda se os modelos errarem em clientes diferentes. A **correlação entre os erros out-of-fold** dos modelos ajustados vai de **0,976 a 0,998**; XGBoost e Random Forest (0,998) erram praticamente nos mesmos clientes.
+
+Critério fixado: adotar só se vencer o XGBoost ajustado com win rate > 60% em PR AUC e sem piorar o Brier.
+
+| Ensemble | Ganho em PR AUC | Win rate PR AUC | Win rate Brier | Decisão |
+|---|---|---|---|---|
+| Votação soft XGBoost + RF | +0,0002 | 47% | 60% | não adotar |
+| Votação soft XGBoost + RF + logística | +0,0009 | 60% (não passa de 60%) | 73% | não adotar |
+| Stacking XGBoost + RF + logística | +0,0009 | 73% | **13%** | **vetado pela calibração** |
+
+![Ensembles](../reports/figures/model_06_ensembles.png)
+
+O stacking ganharia em PR AUC, mas piora o Brier em 13 de 15 rodadas. Em todos os casos, o ganho (≤ 0,0009) é menor que a variação natural entre rodadas, e três modelos custariam mais para manter e explicar.
+
+**Decisão: o modelo final é o XGBoost ajustado, sozinho** (`config.FINAL_MODEL`).
+
+> TODO (Etapas 12–17).
 
 ## 4. Conclusões
 

@@ -11,8 +11,9 @@ from dataclasses import dataclass
 
 from sklearn.base import BaseEstimator
 from sklearn.dummy import DummyClassifier
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, StackingClassifier, VotingClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import StratifiedKFold
 from sklearn.pipeline import Pipeline
 from sklearn.tree import DecisionTreeClassifier
 from xgboost import XGBClassifier
@@ -97,3 +98,35 @@ def build_pipeline(name: str, model: BaseEstimator | None = None, tuned: bool = 
         status_as_category=spec.linear and config.STATUS_AS_CATEGORY_LINEAR,
     )
     return Pipeline([("prep", prep), ("model", model if model is not None else spec.factory())])
+
+
+ENSEMBLES: dict[str, tuple[str, list[str]]] = {
+    "voting_xgb_rf": ("soft", ["xgboost", "random_forest"]),
+    "voting_xgb_rf_logit": ("soft", ["xgboost", "random_forest", "logistic"]),
+    "stacking_xgb_rf_logit": ("stacking", ["xgboost", "random_forest", "logistic"]),
+}
+
+
+def build_ensemble(name: str) -> VotingClassifier | StackingClassifier:
+    """Combinação de modelos ajustados, cada um com o próprio pré-processamento.
+
+    Na votação soft, a probabilidade final é a média das probabilidades. No
+    stacking, uma regressão logística aprende o peso de cada modelo a partir de
+    previsões out-of-fold geradas **dentro** do treino (sem vazamento).
+
+    Args:
+        name: Chave em ``ENSEMBLES``.
+
+    Returns:
+        Ensemble não ajustado.
+    """
+    kind, members = ENSEMBLES[name]
+    estimators = [(m, build_pipeline(m, tuned=True)) for m in members]
+    if kind == "soft":
+        return VotingClassifier(estimators, voting="soft")
+    return StackingClassifier(
+        estimators,
+        final_estimator=LogisticRegression(max_iter=2_000),
+        cv=StratifiedKFold(n_splits=config.CV_SPLITS, shuffle=True, random_state=config.SEED),
+        stack_method="predict_proba",
+    )
