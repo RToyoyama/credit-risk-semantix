@@ -1,10 +1,10 @@
 capacidade,comparação,diferença,ic_inf,ic_sup
-0.05,maior valor esperado (modelo) − regra de atraso (sem modelo),10080716.52,8552143.680999998,11616922.356499998
-0.05,maior valor esperado (modelo) − maior PD (modelo),12015884.16,10365765.066,13710298.686999999
-0.05,maior PD (modelo) − regra de atraso (sem modelo),-1935167.6399999997,-2752562.9745,-1166142.7045
-0.1,maior valor esperado (modelo) − regra de atraso (sem modelo),7689006.419999999,6320678.414,9121186.039499998
-0.1,maior valor esperado (modelo) − maior PD (modelo),8579009.280000001,7122451.559,10082896.263999999
-0.1,maior PD (modelo) − regra de atraso (sem modelo),-890002.8599999999,-1430896.3994999994,-423376.5490000001
-0.2,maior valor esperado (modelo) − regra de atraso (sem modelo),10189154.1,8781611.909999998,11641053.462999998
-0.2,maior valor esperado (modelo) − maior PD (modelo),10703835.779999997,9261434.4725,12195045.720999999
-0.2,maior PD (modelo) − regra de atraso (sem modelo),-514681.68,-994669.4985,-75020.65000000002
+0.05,maior valor esperado (modelo) − regra de atraso (sem modelo),10075974.239999998,8547935.8625,11602510.3895
+0.05,maior valor esperado (modelo) − maior PD (modelo),11989929.719999999,10315076.6115,13712021.608
+0.05,maior PD (modelo) − regra de atraso (sem modelo),-1913955.4799999997,-2758949.2704999996,-1104952.8995000005
+0.1,maior valor esperado (modelo) − regra de atraso (sem modelo),7717001.459999999,6343142.02,9151474.695499998
+0.1,maior valor esperado (modelo) − maior PD (modelo),8723848.98,7263787.6755,10249425.481999999
+0.1,maior PD (modelo) − regra de atraso (sem modelo),-1006847.52,-1582828.541,-496775.34550000035
+0.2,maior valor esperado (modelo) − regra de atraso (sem modelo),10218649.2,8800283.672999999,11678497.885499997
+0.2,maior valor esperado (modelo) − maior PD (modelo),10828657.86,9385467.186999999,12317192.719999999
+0.2,maior PD (modelo) − regra de atraso (sem modelo),-610008.6599999999,-1093402.491,-169495.57600000018

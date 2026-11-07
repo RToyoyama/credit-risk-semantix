@@ -515,6 +515,52 @@ def capacity_experiment() -> pd.DataFrame:
     return out
 
 
+def sensitive_experiment() -> pd.DataFrame:
+    """Etapa 13A: remover atributos sensíveis (sexo, estado civil, idade)?
+
+    Critério de não inferioridade, fixado antes: remover se a perda de PR AUC
+    for menor que ``config.NONINFERIORITY_PR_AUC`` e a do valor da política
+    (capacidade de 10%, OOF) for menor que ``config.NONINFERIORITY_VALUE``.
+    Prefere-se a variante mais restritiva que passar.
+
+    Returns:
+        Uma linha por variante (``reports/sensitive_experiment.csv``).
+    """
+    df = load_train()
+    X, y = df.drop(columns=[config.TARGET]), df[config.TARGET]
+    ead = exposure(df).to_numpy()
+    prem = Premises()
+    folds, values = {}, {}
+    for name, excl in config.SENSITIVE_VARIANTS.items():
+        pipe = build_pipeline(config.FINAL_MODEL, tuned=True, exclude=tuple(excl))
+        folds[name] = cv_scores(pipe, X, y)
+        p = oof_predictions(pipe, X, y)
+        ev = expected_value(p, ead, prem)
+        values[name] = policy_result(
+            capacity_mask(ev, config.CAPACITY, ev > 0), y.to_numpy(), ead, prem
+        )["valor"]
+        logger.info("Sensíveis: %s concluído", name)
+    rows = []
+    for name in config.SENSITIVE_VARIANTS:
+        comp = paired_comparison(folds["atual"], folds[name], "pr_auc")
+        value_loss = 1 - values[name] / values["atual"]
+        rows.append(
+            {
+                "variante": name,
+                "pr_auc": comp["candidato"],
+                "perda_pr_auc": -comp["ganho_medio"],
+                "win_rate_vs_atual": comp["win_rate"],
+                "valor_politica": values[name],
+                "perda_valor_pct": value_loss,
+                "nao_inferior": (-comp["ganho_medio"] < config.NONINFERIORITY_PR_AUC)
+                and (value_loss < config.NONINFERIORITY_VALUE),
+            }
+        )
+    out = pd.DataFrame(rows)
+    out.to_csv(config.REPORTS_DIR / "sensitive_experiment.csv", index=False)
+    return out
+
+
 EXPERIMENTS = {
     "feature_experiment": feature_experiment,
     "status_category_experiment": status_category_experiment,
@@ -526,6 +572,7 @@ EXPERIMENTS = {
     "calibration_experiment": calibration_experiment,
     "decision_experiment": decision_experiment,
     "capacity_experiment": capacity_experiment,
+    "sensitive_experiment": sensitive_experiment,
 }
 
 

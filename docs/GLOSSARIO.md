@@ -110,3 +110,7 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | Restrição de capacidade | *capacity constraint* | o limite de quantos clientes a equipe consegue acionar por mês; com ele, a pergunta vira "quem acionar primeiro?" | 12 |
 | Análise de sensibilidade | *sensitivity analysis* | refazer a conta trocando uma premissa de cada vez, para ver se a conclusão muda quando ela está errada | 12 |
 | Robustez | *robustness check* | conferir se uma conclusão se mantém quando se muda um detalhe do método | 12 |
+| Atributo sensível | *protected / sensitive attribute* | uma característica da pessoa que não deveria influenciar a decisão (ex.: sexo, estado civil), por motivos éticos ou legais | 13 |
+| Não inferioridade | *non-inferiority* | critério que aceita uma mudança se ela não piorar o resultado além de uma margem combinada antes. Útil quando a mudança tem outro benefício (aqui, ético) | 13 |
+| Equidade | *fairness* | verificar se o modelo funciona e decide de forma parecida para grupos diferentes (ex.: homens e mulheres) | 13 |
+| Fonte única de verdade | *single source of truth* | um único lugar no código define a regra (aqui, o modelo oficial), e todas as partes o usam, sem cópias que possam divergir | 13 |

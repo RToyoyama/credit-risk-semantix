@@ -54,3 +54,13 @@ def test_soft_voting_is_mean_of_members(clean_big):
     vote = build_ensemble("voting_xgb_rf").fit(clean_big, y)
     members = [est.predict_proba(clean_big)[:, 1] for est in vote.estimators_]
     assert np.allclose(vote.predict_proba(clean_big)[:, 1], np.mean(members, axis=0))
+
+
+def test_final_pipeline_excludes_sensitive_attributes(clean_big):
+    from credit_risk.models import final_pipeline
+
+    pipe = final_pipeline().fit(clean_big, clean_big[config.TARGET])
+    names = set(pipe.named_steps["prep"].named_steps["prep"].get_feature_names_out())
+    for col in config.MODEL_EXCLUDE:
+        assert not any(n == col or n.startswith(f"{col}_") for n in names)
+    assert "delay_months" in names

@@ -13,13 +13,16 @@ from credit_risk.features import build_features
 
 
 def feature_columns(
-    engineered: bool = True, status_as_category: bool = False
+    engineered: bool = True,
+    status_as_category: bool = False,
+    exclude: tuple[str, ...] = (),
 ) -> tuple[list[str], list[str]]:
     """Separa as colunas em numéricas e categóricas.
 
     Args:
         engineered: Inclui as features de resumo da Etapa 7.
         status_as_category: Trata ``pay_status_*`` como categoria em vez de número.
+        exclude: Colunas a deixar fora do modelo (ex.: atributos sensíveis).
 
     Returns:
         Tupla ``(numéricas, categóricas)``.
@@ -30,11 +33,17 @@ def feature_columns(
     if engineered:
         numeric += config.ENGINEERED_FEATURES
     categorical = config.CATEGORICAL_COLS + (config.PAY_STATUS if status_as_category else [])
-    return numeric, categorical
+    return (
+        [c for c in numeric if c not in exclude],
+        [c for c in categorical if c not in exclude],
+    )
 
 
 def make_preprocessor(
-    scaled: bool = True, engineered: bool = True, status_as_category: bool = False
+    scaled: bool = True,
+    engineered: bool = True,
+    status_as_category: bool = False,
+    exclude: tuple[str, ...] = (),
 ) -> ColumnTransformer:
     """Escala (opcional) nos números e one-hot nas categorias, com saída pandas.
 
@@ -42,11 +51,12 @@ def make_preprocessor(
         scaled: Padroniza os números (modelos lineares). Árvores não precisam.
         engineered: Inclui as features de resumo.
         status_as_category: Trata ``pay_status_*`` como categoria.
+        exclude: Colunas a deixar fora do modelo.
 
     Returns:
         ``ColumnTransformer`` não ajustado; colunas fora das listas são descartadas.
     """
-    numeric, categorical = feature_columns(engineered, status_as_category)
+    numeric, categorical = feature_columns(engineered, status_as_category, exclude)
     onehot = OneHotEncoder(
         handle_unknown="infrequent_if_exist",
         min_frequency=config.MIN_CATEGORY_COUNT,
@@ -64,7 +74,10 @@ def make_preprocessor(
 
 
 def make_feature_pipeline(
-    scaled: bool = True, engineered: bool = True, status_as_category: bool = False
+    scaled: bool = True,
+    engineered: bool = True,
+    status_as_category: bool = False,
+    exclude: tuple[str, ...] = (),
 ) -> Pipeline:
     """Dados limpos → features determinísticas → pré-processamento.
 
@@ -72,6 +85,7 @@ def make_feature_pipeline(
         scaled: Padroniza os números.
         engineered: Inclui as features de resumo.
         status_as_category: Trata ``pay_status_*`` como categoria.
+        exclude: Colunas a deixar fora do modelo.
 
     Returns:
         Pipeline sem modelo; a Etapa 9 acrescenta o classificador no final.
@@ -79,6 +93,6 @@ def make_feature_pipeline(
     return Pipeline(
         [
             ("features", FunctionTransformer(build_features)),
-            ("prep", make_preprocessor(scaled, engineered, status_as_category)),
+            ("prep", make_preprocessor(scaled, engineered, status_as_category, exclude)),
         ]
     )

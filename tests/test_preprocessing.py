@@ -68,3 +68,10 @@ def test_clone_drops_fitted_state(clean_big):
     copy = clone(fitted)
     assert not hasattr(copy.named_steps["prep"], "transformers_")
     pd.testing.assert_frame_equal(copy.fit_transform(clean_big), fitted.transform(clean_big))
+
+
+def test_exclude_removes_columns_from_output(clean_big):
+    out = make_feature_pipeline(exclude=("sex", "marriage", "age")).fit_transform(clean_big)
+    assert not any(c.startswith(("sex_", "marriage_")) for c in out.columns)
+    assert "age" not in out
+    assert "limit_bal" in out

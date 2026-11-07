@@ -187,3 +187,17 @@ OOF_PREDICTIONS = PROCESSED_DIR / "oof_predictions.parquet"
 # aciona ~60% da carteira): a equipe aciona no máximo esta fração por mês.
 CAPACITY = 0.10
 CAPACITY_SENSITIVITY = [0.05, 0.10, 0.20]
+
+# ── Atributos sensíveis (Etapa 13A) ─────────────────────────
+SENSITIVE_VARIANTS: dict[str, list[str]] = {
+    "atual": [],
+    "sem sexo e estado civil": ["sex", "marriage"],
+    "sem sexo, estado civil e idade": ["sex", "marriage", "age"],
+}
+NONINFERIORITY_PR_AUC = 0.005  # perda máxima aceitável de PR AUC ao remover atributos
+NONINFERIORITY_VALUE = 0.02  # perda máxima aceitável (fração) do valor da política
+MODEL_EXCLUDE: list[str] = [
+    "sex",
+    "marriage",
+    "age",
+]  # Etapa 13A: removidos sem perda (não inferioridade)

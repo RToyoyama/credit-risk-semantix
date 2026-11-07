@@ -16,13 +16,13 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.pipeline import Pipeline
 
 from credit_risk import config
-from credit_risk.models import build_pipeline
+from credit_risk.models import final_pipeline
 
 CALIBRATION_METHODS = ["none", "sigmoid", "isotonic"]
 
 
 def calibrated_pipeline(method: str = "none") -> Pipeline | CalibratedClassifierCV:
-    """Modelo final (XGBoost ajustado), com ou sem correção das probabilidades.
+    """Modelo final (``models.final_pipeline``), com ou sem correção das probabilidades.
 
     A correção é aprendida em partes do treino que o modelo não viu
     (validação cruzada interna de 5 folds), sem vazamento.
@@ -36,7 +36,7 @@ def calibrated_pipeline(method: str = "none") -> Pipeline | CalibratedClassifier
     Raises:
         ValueError: Se o método for desconhecido.
     """
-    base = build_pipeline(config.FINAL_MODEL, tuned=True)
+    base = final_pipeline()
     if method == "none":
         return base
     if method not in CALIBRATION_METHODS:

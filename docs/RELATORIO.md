@@ -326,19 +326,23 @@ O stacking ganharia em PR AUC, mas piora o Brier em 13 de 15 rodadas. Em todos o
 
 ### 3.9 Calibração (Etapa 12, Parte A)
 
+*A partir da Etapa 13A, o modelo final não usa sexo, estado civil nem idade. Os números desta seção foram recalculados com esse modelo; as decisões não mudaram.*
+
 A decisão por custo multiplica a probabilidade pela dívida, então a probabilidade precisa "falar a verdade". Testei duas correções no XGBoost ajustado, aprendidas em partes do treino que o modelo não viu. Critério: adotar se o Brier melhorar com win rate > 60% sem piorar o PR AUC (win rate ≥ 50%).
 
 | Método | Brier | Win rate Brier | Win rate PR AUC | Erro médio por faixa | Decisão |
 |---|---|---|---|---|---|
-| Sem correção | 0,1330 | — | — | 1,1 p.p. (pior faixa: 3,6) | **mantido** |
-| Sigmoid (Platt) | 0,1336 | 0% | 60% | 2,4 p.p. | não adotar |
-| Isotônica | 0,1329 | 73% | **40%** | 0,3 p.p. | não adotar |
+| Sem correção | 0,1332 | — | — | 1,2 p.p. (pior faixa: 3,5) | **mantido** |
+| Sigmoid (Platt) | 0,1338 | 0% | 67% | 2,5 p.p. | não adotar |
+| Isotônica | 0,1331 | 67% | **20%** | 0,2 p.p. | não adotar |
 
 ![Calibração](../reports/figures/model_07_calibracao.png)
 
-O modelo sem correção é levemente "comprimido" nas pontas (prevê 5,8% na faixa de menor risco, cuja taxa real é 3,5%; e 67,7% na de maior risco, real 71,3%), mas entre 10% e 30%, onde a decisão de agir acontece, o erro é ≤ 0,8 p.p. A isotônica corrige as pontas, mas piora o PR AUC em 60% das rodadas. **Decisão: sem correção**, pelo critério fixado. A Parte B confere, como robustez, se a isotônica mudaria o resultado financeiro.
+O modelo sem correção é levemente "comprimido" nas pontas (prevê 5,7% na faixa de menor risco, cuja taxa real é 3,8%; e 67,8% na de maior risco, real 71,3%), mas entre 10% e 30%, onde a decisão de agir acontece, o erro é ≤ 0,7 p.p. A isotônica corrige as pontas, mas piora o PR AUC em 80% das rodadas. **Decisão: sem correção**, pelo critério fixado. A Parte B confere, como robustez, se a isotônica mudaria o resultado financeiro.
 
 ### 3.10 Política de decisão por custo (Etapa 12, Parte B)
+
+*A partir da Etapa 13A, o modelo final não usa sexo, estado civil nem idade. Os números desta seção foram recalculados com esse modelo; as decisões não mudaram.*
 
 **Premissas de negócio** (`config.py`; aceitas antes de rodar e testadas na sensibilidade):
 
@@ -359,27 +363,39 @@ Para cada cliente, o **valor de agir** é `LGD × EAD × eficácia − custo` se
 | Regra por cliente (valor esperado > 0) − não agir | **+NT$ 40,4 mi** | 38,3 a 42,7 mi |
 | Regra por cliente − melhor regra fixa ("≥ 1 mês com atraso") | **+NT$ 13,4 mi** | 11,9 a 14,8 mi |
 
-O critério de sucesso (Seção 1.5) está cumprido no treino. **Porém**, com estas premissas, acionar um caloteiro típico evita ≈ NT$ 3.600 e acionar um bom pagador custa NT$ 400, então a política aciona **59% da carteira** e o "melhor limiar único" degenera para 0,01. Como nenhuma operação aciona 60% dos clientes por mês, a política foi revista **depois de ver este resultado** (decisão registrada): premissas mantidas, com uma **restrição de capacidade de 10%** da carteira por mês. A calibração isotônica mudaria o valor em só 0,09%, o que confirma a escolha da Seção 3.9.
+O critério de sucesso (Seção 1.5) está cumprido no treino. **Porém**, com estas premissas, acionar um caloteiro típico evita ≈ NT$ 3.600 e acionar um bom pagador custa NT$ 400, então a política aciona **59% da carteira** e o "melhor limiar único" degenera para 0,01. Como nenhuma operação aciona 60% dos clientes por mês, a política foi revista **depois de ver este resultado** (decisão registrada): premissas mantidas, com uma **restrição de capacidade de 10%** da carteira por mês. A calibração isotônica mudaria o valor em só 0,01%, o que confirma a escolha da Seção 3.9.
 
 **Com capacidade de 10%: quem acionar?** Critério: o valor esperado precisa vencer a regra de atraso com IC 95% acima de zero.
 
 | Política (2.400 clientes) | Calotes alcançados | Valor |
 |---|---|---|
-| **Maior valor esperado** (PD × exposição) | 1.142 (21,5%) | **NT$ 26,6 mi** |
-| Maior PD | 1.711 (32,2%) | NT$ 18,1 mi |
+| **Maior valor esperado** (PD × exposição) | 1.142 (21,5%) | **NT$ 26,7 mi** |
+| Maior PD | 1.711 (32,2%) | NT$ 17,9 mi |
 | Regra de atraso (sem modelo; desempata pela maior fatura) | 1.701 (32,0%) | NT$ 19,0 mi |
 
 ![Política com capacidade](../reports/figures/decision_01_capacidade.png)
 
-- **Valor esperado − regra de atraso: +NT$ 7,7 mi** (IC 6,3 a 9,1 mi); +10,1 mi com capacidade de 5% e +10,2 mi com 20%.
-- **Contraintuitivo:** ordenar só pela PD **perde** da regra de atraso (−NT$ 0,9 mi; IC −1,4 a −0,4 mi). A regra desempata pela maior fatura, ou seja, já considera o valor em jogo. **Um bom modelo de risco sozinho não basta; o valor vem de combinar a probabilidade com a exposição.**
-- **Sensibilidade:** o modelo vence a regra em todos os 12 cenários (+NT$ 3,7 mi a +15,5 mi). A eficácia da ação é a premissa que mais pesa. A política evita 17,4% da perda total da carteira.
+- **Valor esperado − regra de atraso: +NT$ 7,7 mi** (IC 6,3 a 9,2 mi); +10,1 mi com capacidade de 5% e +10,2 mi com 20%.
+- **Contraintuitivo:** ordenar só pela PD **perde** da regra de atraso (−NT$ 1,0 mi; IC −1,6 a −0,5 mi). A regra desempata pela maior fatura, ou seja, já considera o valor em jogo. **Um bom modelo de risco sozinho não basta; o valor vem de combinar a probabilidade com a exposição.**
+- **Sensibilidade:** o modelo vence a regra em todos os 12 cenários (+NT$ 3,8 mi a +15,6 mi). A eficácia da ação é a premissa que mais pesa. A política evita 17,5% da perda total da carteira.
 
 ![Sensibilidade](../reports/figures/decision_02_sensibilidade.png)
 
 **Política oficial:** acionar, por mês, os **10% de clientes com maior valor esperado de ação** (`config.CAPACITY`).
 
-> TODO (Etapas 13–17).
+### 3.11 Atributos sensíveis (Etapa 13, Parte A)
+
+Usar sexo ou estado civil para decidir sobre crédito é eticamente questionável e, em vários países, restrito por lei (no Brasil, a LGPD proíbe o tratamento de dados pessoais para fins discriminatórios). A decisão foi tomada **no treino, antes do holdout**, para não escolher o modelo olhando a prova. Critério de **não inferioridade**: remover se o PR AUC cair menos de 0,005 e o valor da política menos de 2%, preferindo a variante mais restritiva.
+
+| Variante | PR AUC | Valor da política (10%) |
+|---|---|---|
+| Com sexo, estado civil e idade | 0,5657 | NT$ 26,64 mi |
+| Sem sexo e estado civil | 0,5658 | NT$ 26,71 mi |
+| **Sem sexo, estado civil e idade** | **0,5657** | **NT$ 26,67 mi** |
+
+**Decisão:** o modelo final **não usa sexo, estado civil nem idade** (`config.MODEL_EXCLUDE`); a escolha ética não tem custo. Esses dados ficam só para **auditar** a equidade no holdout. O modelo oficial é `models.final_pipeline()`, usado em toda a decisão; os números das Seções 3.9 e 3.10 já foram recalculados com ele.
+
+> TODO (Etapas 13B–17).
 
 ## 4. Conclusões
 

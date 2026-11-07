@@ -75,7 +75,12 @@ CATALOG: dict[str, ModelSpec] = {
 }
 
 
-def build_pipeline(name: str, model: BaseEstimator | None = None, tuned: bool = False) -> Pipeline:
+def build_pipeline(
+    name: str,
+    model: BaseEstimator | None = None,
+    tuned: bool = False,
+    exclude: tuple[str, ...] = (),
+) -> Pipeline:
     """Pipeline completo (features → pré-processamento → modelo) de um modelo do catálogo.
 
     Args:
@@ -84,6 +89,7 @@ def build_pipeline(name: str, model: BaseEstimator | None = None, tuned: bool = 
         tuned: Usa os hiperparâmetros adotados na Etapa 11 (``best_params.json``),
             se houver. O padrão é False para manter reproduzíveis os experimentos
             das Etapas 9 e 10.
+        exclude: Colunas a deixar fora do modelo (ex.: atributos sensíveis).
 
     Returns:
         Pipeline não ajustado.
@@ -96,6 +102,7 @@ def build_pipeline(name: str, model: BaseEstimator | None = None, tuned: bool = 
     prep = make_feature_pipeline(
         scaled=spec.linear,
         status_as_category=spec.linear and config.STATUS_AS_CATEGORY_LINEAR,
+        exclude=tuple(exclude),
     )
     return Pipeline([("prep", prep), ("model", model if model is not None else spec.factory())])
 
@@ -130,3 +137,15 @@ def build_ensemble(name: str) -> VotingClassifier | StackingClassifier:
         cv=StratifiedKFold(n_splits=config.CV_SPLITS, shuffle=True, random_state=config.SEED),
         stack_method="predict_proba",
     )
+
+
+def final_pipeline() -> Pipeline:
+    """O modelo oficial do projeto: única fonte de verdade para decisão, API e dashboard.
+
+    XGBoost com os hiperparâmetros da Etapa 11, sem os atributos sensíveis
+    removidos na Etapa 13A (sexo, estado civil e idade).
+
+    Returns:
+        Pipeline não ajustado.
+    """
+    return build_pipeline(config.FINAL_MODEL, tuned=True, exclude=tuple(config.MODEL_EXCLUDE))
