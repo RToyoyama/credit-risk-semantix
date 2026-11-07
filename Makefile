@@ -2,7 +2,7 @@
 PY := .venv/bin/python
 BIN := .venv/bin
 
-.PHONY: help venv install lock data split experiments tune final monitor api lint format test check hooks clean
+.PHONY: help venv install lock data split experiments tune final monitor api app lint format test check hooks clean
 
 help: ## Lista os comandos disponíveis
 	@grep -E '^[a-z_-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
@@ -39,6 +39,9 @@ monitor: ## PSI do holdout e de cenários de drift; gera reports/monitoring.json
 
 api: ## Sobe a API de scoring em http://localhost:8000 (docs em /docs)
 	$(BIN)/uvicorn api.main:app --host 0.0.0.0 --port 8000
+
+app: ## Sobe o dashboard em http://localhost:8501
+	$(BIN)/streamlit run app/dashboard.py --server.port 8501
 
 lint: ## Verifica o código com ruff (sem alterar)
 	$(BIN)/ruff check .

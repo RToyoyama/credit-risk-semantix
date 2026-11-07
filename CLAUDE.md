@@ -143,7 +143,7 @@ convention = "google"
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["D", "ANN"]
 "*.ipynb" = ["D", "ANN", "E402"]
-"app/*" = ["D"]
+"app/*" = ["D", "E501"]                   # textos de interface longos
 "api/*" = ["B008"]                         # Depends()/Query() em defaults é o padrão do FastAPI
 ```
 
