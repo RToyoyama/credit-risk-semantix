@@ -117,11 +117,17 @@ def engineered_features(df: pd.DataFrame) -> pd.DataFrame:
 def build_features(df: pd.DataFrame) -> pd.DataFrame:
     """Colunas originais (sem ID e sem alvo) + features de resumo.
 
+    As colunas que o modelo final não usa (``config.MODEL_EXCLUDE``: sexo,
+    estado civil e idade) podem estar ausentes: a API não as coleta (LGPD,
+    princípio da necessidade). Qualquer outra coluna ausente gera erro.
+
     Args:
         df: Dados limpos.
 
     Returns:
         Matriz de features determinísticas, pronta para o pré-processamento.
     """
-    base = df[config.CATEGORICAL_COLS + config.RAW_NUMERIC_COLS]
+    wanted = config.CATEGORICAL_COLS + config.RAW_NUMERIC_COLS
+    present = [c for c in wanted if c in df.columns or c not in config.MODEL_EXCLUDE]
+    base = df[present]
     return pd.concat([base, engineered_features(df)], axis=1)

@@ -2,7 +2,7 @@
 PY := .venv/bin/python
 BIN := .venv/bin
 
-.PHONY: help venv install lock data split experiments tune final monitor lint format test check hooks clean
+.PHONY: help venv install lock data split experiments tune final monitor api lint format test check hooks clean
 
 help: ## Lista os comandos disponíveis
 	@grep -E '^[a-z_-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
@@ -36,6 +36,9 @@ final: ## Treina o modelo final e avalia o holdout UMA vez (recusa rodar de novo
 
 monitor: ## PSI do holdout e de cenários de drift; gera reports/monitoring.json
 	$(PY) -m credit_risk.monitoring
+
+api: ## Sobe a API de scoring em http://localhost:8000 (docs em /docs)
+	$(BIN)/uvicorn api.main:app --host 0.0.0.0 --port 8000
 
 lint: ## Verifica o código com ruff (sem alterar)
 	$(BIN)/ruff check .

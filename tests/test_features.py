@@ -107,3 +107,15 @@ def test_build_features_drops_id_and_target(clean_rows):
     out = build_features(clean_rows)
     assert "id" not in out and config.TARGET not in out
     assert out.shape[1] == len(config.CATEGORICAL_COLS) + len(config.RAW_NUMERIC_COLS) + 13
+
+
+def test_build_features_accepts_missing_excluded_columns(clean_rows):
+    for col in ["education"]:
+        clean_rows[col] = 1
+    out = build_features(clean_rows)
+    assert not set(config.MODEL_EXCLUDE) & set(out.columns)
+
+
+def test_build_features_still_requires_model_columns(clean_rows):
+    with pytest.raises(KeyError):
+        build_features(clean_rows)
