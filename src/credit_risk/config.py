@@ -167,3 +167,6 @@ SEARCH_SEED = 2024  # folds da busca ≠ folds da avaliação (seed 42)
 SEARCH_N_ITER = {"random_forest": 40, "xgboost": 60}
 BEST_PARAMS = REPORTS_DIR / "best_params.json"
 FINAL_MODEL = "xgboost"  # Etapa 11: líder após o tuning; nenhum ensemble passou no critério
+CALIBRATION_METHOD = (
+    "none"  # Etapa 12A: sigmoid piora o Brier; isotônica piora o PR AUC (win rate 40%)
+)

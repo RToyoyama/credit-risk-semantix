@@ -15,6 +15,7 @@ from sklearn.pipeline import Pipeline
 
 from credit_risk import config
 from credit_risk.balancing import balanced_pipeline
+from credit_risk.decision import calibrated_pipeline
 from credit_risk.evaluate import (
     cv_scores,
     oof_predictions,
@@ -295,6 +296,55 @@ def ensemble_experiment() -> pd.DataFrame:
     return decision
 
 
+def calibration_experiment() -> pd.DataFrame:
+    """Etapa 12A: XGBoost ajustado sem correção × sigmoid × isotônica.
+
+    Critério: adotar se o Brier melhorar com win rate > 60% e o PR AUC não
+    piorar (win rate >= 50%). Salva também a curva de confiabilidade (OOF).
+
+    Returns:
+        Decisão por método (``reports/calibration_decision.csv``).
+    """
+    df = load_train()
+    X, y = df.drop(columns=[config.TARGET]), df[config.TARGET]
+    base = cv_scores(calibrated_pipeline("none"), X, y)
+    rows, tables = [], []
+    for method in ["sigmoid", "isotonic"]:
+        cand = cv_scores(calibrated_pipeline(method), X, y)
+        for metric in ["brier", "pr_auc", "roc_auc", "ks"]:
+            rows.append(
+                {"método": method, "métrica": metric, **paired_comparison(base, cand, metric)}
+            )
+        logger.info("Calibração: %s concluído", method)
+    for method in ["none", "sigmoid", "isotonic"]:
+        p = oof_predictions(calibrated_pipeline(method), X, y)
+        tables.append(reliability_table(y, p).assign(método=method, media_prevista=p.mean()))
+    comparisons = pd.DataFrame(rows)
+    comparisons.to_csv(config.REPORTS_DIR / "calibration_experiment.csv", index=False)
+    pd.concat(tables, ignore_index=True).to_csv(
+        config.REPORTS_DIR / "calibration_reliability.csv", index=False
+    )
+    wide = comparisons.pivot_table(
+        index="método", columns="métrica", values=["ganho_medio", "win_rate"]
+    )
+    decision = pd.DataFrame(
+        {
+            "ganho_brier": wide[("ganho_medio", "brier")],
+            "win_rate_brier": wide[("win_rate", "brier")],
+            "ganho_pr_auc": wide[("ganho_medio", "pr_auc")],
+            "win_rate_pr_auc": wide[("win_rate", "pr_auc")],
+        }
+    )
+    decision["adotar"] = (
+        (decision["ganho_brier"] > 0)
+        & (decision["win_rate_brier"] > config.WIN_RATE_MIN)
+        & (decision["win_rate_pr_auc"] >= 0.5)
+    )
+    decision = decision.reset_index()
+    decision.to_csv(config.REPORTS_DIR / "calibration_decision.csv", index=False)
+    return decision
+
+
 EXPERIMENTS = {
     "feature_experiment": feature_experiment,
     "status_category_experiment": status_category_experiment,
@@ -303,6 +353,7 @@ EXPERIMENTS = {
     "balancing_calibration": balancing_calibration,
     "ensemble_diversity": ensemble_diversity,
     "ensemble_experiment": ensemble_experiment,
+    "calibration_experiment": calibration_experiment,
 }
 
 

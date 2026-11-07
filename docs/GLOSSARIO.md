@@ -102,3 +102,5 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | Diversidade | *diversity* | o quanto os modelos erram em clientes diferentes. Sem diversidade, combinar não ajuda | 11 |
 | Votação soft | *soft voting* | combinação que tira a média das probabilidades dos modelos | 11 |
 | Stacking | *stacking* | combinação em que um modelo "chefe" aprende quanto confiar em cada modelo, usando previsões feitas em dados que eles não viram | 11 |
+| Calibração sigmoid (Platt) | *Platt scaling* | corrige as probabilidades com uma curva em "S" aprendida em dados que o modelo não viu | 12 |
+| Calibração isotônica | *isotonic regression* | corrige as probabilidades com uma "escada" livre e sempre crescente; mais flexível que a sigmoid, mas pode se ajustar ao ruído | 12 |

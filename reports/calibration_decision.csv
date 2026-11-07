@@ -1,0 +1,3 @@
+método,ganho_brier,win_rate_brier,ganho_pr_auc,win_rate_pr_auc,adotar
+isotonic,0.00010417410927781775,0.7333333333333333,-0.0006079860855096708,0.4,False
+sigmoid,-0.0005968850611044518,0.0,0.0005302402144874652,0.6,False

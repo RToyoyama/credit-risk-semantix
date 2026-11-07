@@ -324,7 +324,21 @@ O stacking ganharia em PR AUC, mas piora o Brier em 13 de 15 rodadas. Em todos o
 
 **Decisão: o modelo final é o XGBoost ajustado, sozinho** (`config.FINAL_MODEL`).
 
-> TODO (Etapas 12–17).
+### 3.9 Calibração (Etapa 12, Parte A)
+
+A decisão por custo multiplica a probabilidade pela dívida, então a probabilidade precisa "falar a verdade". Testei duas correções no XGBoost ajustado, aprendidas em partes do treino que o modelo não viu. Critério: adotar se o Brier melhorar com win rate > 60% sem piorar o PR AUC (win rate ≥ 50%).
+
+| Método | Brier | Win rate Brier | Win rate PR AUC | Erro médio por faixa | Decisão |
+|---|---|---|---|---|---|
+| Sem correção | 0,1330 | — | — | 1,1 p.p. (pior faixa: 3,6) | **mantido** |
+| Sigmoid (Platt) | 0,1336 | 0% | 60% | 2,4 p.p. | não adotar |
+| Isotônica | 0,1329 | 73% | **40%** | 0,3 p.p. | não adotar |
+
+![Calibração](../reports/figures/model_07_calibracao.png)
+
+O modelo sem correção é levemente "comprimido" nas pontas (prevê 5,8% na faixa de menor risco, cuja taxa real é 3,5%; e 67,7% na de maior risco, real 71,3%), mas entre 10% e 30%, onde a decisão de agir acontece, o erro é ≤ 0,8 p.p. A isotônica corrige as pontas, mas piora o PR AUC em 60% das rodadas. **Decisão: sem correção**, pelo critério fixado. A Parte B confere, como robustez, se a isotônica mudaria o resultado financeiro.
+
+> TODO (Etapas 12B–17).
 
 ## 4. Conclusões
 
