@@ -475,7 +475,25 @@ A diferença de acionamento entre os sexos acompanha a taxa real de calote. **Li
 - A faixa E (10% dos clientes) concentra cerca de 40% da perda real.
 - **Faixa e prioridade se complementam:** a faixa mede o risco; a prioridade mede onde a ação rende mais. Há clientes prioritários até na faixa B (risco moderado, dívidas grandes).
 
-> TODO (Etapas 15–17).
+### 3.15 Motivos da decisão (Etapa 15)
+
+Para cada cliente, `reasons.py` devolve até **3 motivos**: os conceitos de negócio que mais aumentaram o seu risco, numa frase com os valores reais dele. As contribuições vêm do **TreeSHAP** (exato para árvores), calculado pelo próprio XGBoost; um teste confere que os valores são iguais aos da biblioteca `shap`, e a versão nativa evita uma incompatibilidade conhecida entre as duas bibliotecas na leitura do valor base. As 36 colunas do modelo são somadas em **7 conceitos** (atraso recente, histórico de atraso, uso do limite, pagamentos, limite, valor da fatura, perfil cadastral), para que variáveis colineares não ocupem os três lugares.
+
+| Critério (fixado antes) | Resultado (holdout) | |
+|---|---|---|
+| Aditividade: risco médio + contribuições = risco previsto | erro máximo 0,0 | ✅ |
+| Na faixa E, o 1º motivo mais frequente é atraso | atraso em 100% dos casos (histórico 70%, recente 30%) | ✅ |
+| Coerência com a importância global | atraso lidera a média do \|SHAP\| (0,53 e 0,28) e a importância por permutação | ✅ |
+
+![Motivos por faixa](../reports/figures/reasons_01_por_faixa.png)
+
+**Dois ajustes feitos depois de ver os resultados, só na apresentação** (score, faixa e decisão não mudam):
+1. **Materialidade:** 26% da faixa A recebia "escolaridade" como 1º motivo, com contribuição desprezível (≤ +2% na chance de calote). Agora um fator só vira motivo se aumentar a chance em ≥ 5% (0,05 em log-odds); 73% da faixa A recebe "sem fatores de risco relevantes". Decisão registrada.
+2. **Linguagem:** as frases descrevem o comportamento que pesou ("fatura zerada em setembro (cartão sem uso recente)", com default de 24,8% contra 22,1% na média; "comportamento de pagamento: pagou X% da fatura anterior").
+
+Exemplo (faixa E): *"2 meses de atraso no último pagamento · atraso em 1 dos últimos 6 meses (pior atraso: 2 meses) · usa 98% do limite"*.
+
+> TODO (Etapas 16–17).
 
 ## 4. Conclusões
 

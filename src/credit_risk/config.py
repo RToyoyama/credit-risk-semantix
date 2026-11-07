@@ -227,3 +227,25 @@ BAND_ACTIONS: dict[str, str] = {
 }
 SCORING_PARAMS = REPORTS_DIR / "scoring_params.json"  # cortes definidos no OOF do treino
 BAND_SHIFT_MAX = 0.03  # estabilidade: distribuição por faixa no holdout a no máximo 3 p.p.
+
+# ── Motivos da decisão (Etapa 15) ───────────────────────────
+N_REASONS = 3
+REASON_CONCEPTS: dict[str, list[str]] = {
+    "atraso recente": ["pay_status_1", "delay_recent", "delay_trend"],
+    "histórico de atraso": [*PAY_STATUS[1:], "delay_max", "delay_months"],
+    "uso do limite": ["util_mean", "util_recent", "util_trend", "util_volatility"],
+    "pagamentos": [
+        *PAY_AMT,
+        "pay_ratio_mean",
+        "pay_ratio_recent",
+        "paid_full_all",
+        "revolving_months",
+    ],
+    "limite de crédito": ["limit_bal", "log_limit"],
+    "valor da fatura": BILL_AMT,
+    "perfil cadastral": ["education"],  # prefixo das colunas one-hot
+}
+NO_REASON_TEXT = "sem fatores de risco relevantes"
+# Materialidade (decidida após ver os motivos da faixa A): um fator só vira motivo se
+# aumentar a chance de calote em >= ~5% (exp(0,05) = 1,05). Afeta só a apresentação.
+MIN_REASON_CONTRIBUTION = 0.05

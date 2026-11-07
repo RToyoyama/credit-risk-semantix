@@ -124,3 +124,6 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | Log-odds | *log-odds / logit* | o logaritmo da chance. Transforma "dobrar a chance" numa soma fixa de pontos, por isso é a base dos scores de crédito | 14 |
 | PDO | *points to double the odds* | quantos pontos de score fazem a chance de pagar dobrar. Aqui, 60 | 14 |
 | Monotonicidade | *monotonicity* | quando uma grandeza só sobe (ou só desce) ao longo de uma ordem. Aqui: a taxa de default sobe de A para E, sem inversões | 14 |
+| SHAP | *SHapley Additive exPlanations* | divide a previsão de um cliente em contribuições de cada variável, como dividir a conta de um jantar pelo que cada um consumiu. Risco médio + soma das contribuições = risco do cliente | 15 |
+| TreeSHAP | *TreeSHAP* | a versão exata e rápida do SHAP para modelos de árvores | 15 |
+| Materialidade | *materiality threshold* | o tamanho mínimo para algo ser considerado relevante. Aqui, um fator só vira motivo se aumentar a chance de calote em pelo menos ≈ 5% | 15 |

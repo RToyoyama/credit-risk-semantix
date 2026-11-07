@@ -160,19 +160,29 @@ def score_from_pd(
     )
 
 
-def score_clients(model: object, clients: pd.DataFrame, params: ScoringParams) -> pd.DataFrame:
+def score_clients(
+    model: object,
+    clients: pd.DataFrame,
+    params: ScoringParams,
+    explainer: object | None = None,
+) -> pd.DataFrame:
     """Scoring completo de clientes a partir dos dados limpos (uso da API e do dashboard).
 
     Args:
         model: Pipeline final ajustado.
         clients: Dados limpos (mesmo formato do treino, sem o alvo).
         params: Cortes do scoring.
+        explainer: ``reasons.ReasonExplainer``; se informado, inclui os motivos.
 
     Returns:
-        Resultado de ``score_from_pd`` com o ``id`` de cada cliente, se houver.
+        Resultado de ``score_from_pd`` com o ``id`` (se houver) e, opcionalmente,
+        a coluna ``motivos`` (lista de frases).
     """
     p = model.predict_proba(clients)[:, 1]
     out = score_from_pd(p, exposure(clients).to_numpy(), params)
     if "id" in clients:
         out.insert(0, "id", clients["id"].to_numpy())
+    if explainer is not None:
+        reasons = explainer.explain(clients)
+        out["motivos"] = [[r["frase"] for r in rs] or [config.NO_REASON_TEXT] for rs in reasons]
     return out

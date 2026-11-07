@@ -1,0 +1,11 @@
+faixa,score,pd,perda_esperada,prioritario,motivos
+E,333,0.6609904766082764,7910.469627857208,False,2 meses de atraso no último pagamento · atraso em 1 dos últimos 6 meses (pior atraso: 2 meses) · comportamento de pagamento: pagou 9% da fatura anterior
+E,344,0.6319571137428284,156329.37988075017,True,2 meses de atraso no último pagamento · atraso em 1 dos últimos 6 meses (pior atraso: 2 meses) · usa 98% do limite
+D,440,0.3619910180568695,14380.889572548866,False,atraso em 4 dos últimos 6 meses (pior atraso: 2 meses)
+D,468,0.290652334690094,357.3279802680015,False,atraso em 1 dos últimos 6 meses (pior atraso: 2 meses) · comportamento de pagamento: pagou 0% da fatura anterior · fatura de NT$ 2 mil
+C,481,0.2621726095676422,61.34839063882828,False,comportamento de pagamento: pagou 100% da fatura anterior · fatura de NT$ 390 · cartão quase sem uso (usa 0% do limite)
+C,512,0.198672354221344,0.0,False,fatura zerada em setembro (cartão sem uso recente) · comportamento de pagamento: pagou 100% da fatura anterior
+B,545,0.14423461258411407,27.000719475746152,False,fatura de NT$ 312 · comportamento de pagamento: pagou 100% da fatura anterior
+B,561,0.12290927022695541,21.754940830171105,False,fatura de NT$ 295
+A,580,0.1016082689166069,1598.13549682796,False,comportamento de pagamento: pagou 8% da fatura anterior
+A,606,0.07691046595573425,672.1205619871616,False,sem fatores de risco relevantes

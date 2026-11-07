@@ -654,6 +654,62 @@ def scoring_experiment() -> pd.DataFrame:
     return out
 
 
+def reasons_experiment() -> pd.DataFrame:
+    """Etapa 15: motivos da decisão no holdout (só descrição; nada é escolhido aqui).
+
+    Confere a aditividade, mede que conceito aparece como 1º motivo em cada
+    faixa e a importância global por conceito (média do |SHAP|).
+
+    Returns:
+        Frequência do 1º motivo por faixa (``reports/reasons_by_band.csv``).
+    """
+    import joblib
+
+    from credit_risk.reasons import ReasonExplainer
+    from credit_risk.scoring import load_params, score_clients
+
+    model = joblib.load(config.FINAL_MODEL_PATH)
+    holdout = pd.read_parquet(config.HOLDOUT_PARQUET).drop(columns=[config.TARGET])
+    explainer = ReasonExplainer(model)
+    concepts = explainer.concept_contributions(holdout)
+    p = model.predict_proba(holdout)[:, 1]
+    additivity = float(
+        np.abs(concepts.sum(axis=1) + explainer.base_value - np.log(p / (1 - p))).max()
+    )
+    scored = score_clients(model, holdout, load_params(), explainer)
+    reasons = explainer.explain(holdout)
+    scored["motivo_1"] = [r[0]["conceito"] if r else "sem motivo" for r in reasons]
+    scored["n_motivos"] = [len(r) for r in reasons]
+    by_band = (
+        scored.groupby("faixa")["motivo_1"]
+        .value_counts(normalize=True)
+        .rename("participacao")
+        .reset_index()
+    )
+    by_band.to_csv(config.REPORTS_DIR / "reasons_by_band.csv", index=False)
+    importance = (
+        concepts.abs().mean().sort_values(ascending=False).rename("media_abs_shap").reset_index()
+    )
+    importance.columns = ["conceito", "media_abs_shap"]
+    importance.to_csv(config.REPORTS_DIR / "reasons_concept_importance.csv", index=False)
+    summary = pd.DataFrame(
+        [
+            {
+                "erro_max_aditividade": additivity,
+                "pct_sem_motivo": float((scored["n_motivos"] == 0).mean()),
+                "media_motivos": float(scored["n_motivos"].mean()),
+            }
+        ]
+    )
+    summary.to_csv(config.REPORTS_DIR / "reasons_summary.csv", index=False)
+    examples = scored.groupby("faixa").sample(2, random_state=config.SEED).sort_values("score")
+    examples["motivos"] = examples["motivos"].map(" · ".join)
+    examples[["faixa", "score", "pd", "perda_esperada", "prioritario", "motivos"]].to_csv(
+        config.REPORTS_DIR / "reasons_examples.csv", index=False
+    )
+    return by_band
+
+
 EXPERIMENTS = {
     "feature_experiment": feature_experiment,
     "status_category_experiment": status_category_experiment,
@@ -668,6 +724,7 @@ EXPERIMENTS = {
     "sensitive_experiment": sensitive_experiment,
     "expected_loss_experiment": expected_loss_experiment,
     "scoring_experiment": scoring_experiment,
+    "reasons_experiment": reasons_experiment,
 }
 
 
