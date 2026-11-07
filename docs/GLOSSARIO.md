@@ -104,3 +104,9 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | Stacking | *stacking* | combinação em que um modelo "chefe" aprende quanto confiar em cada modelo, usando previsões feitas em dados que eles não viram | 11 |
 | Calibração sigmoid (Platt) | *Platt scaling* | corrige as probabilidades com uma curva em "S" aprendida em dados que o modelo não viu | 12 |
 | Calibração isotônica | *isotonic regression* | corrige as probabilidades com uma "escada" livre e sempre crescente; mais flexível que a sigmoid, mas pode se ajustar ao ruído | 12 |
+| LGD | *Loss Given Default* | a fração da dívida que se perde quando o cliente dá calote. LGD de 60% = de cada NT$ 100 devidos, NT$ 60 não voltam | 12 |
+| EAD | *Exposure at Default* | quanto o cliente deve no momento do calote; aqui, a fatura mais recente | 12 |
+| Valor esperado | *expected value* | o resultado médio de uma decisão, pesando cada desfecho pela sua probabilidade. Ex.: 20% de chance de ganhar 1.000 e 80% de perder 100 = 0,2 × 1.000 − 0,8 × 100 = +120 | 12 |
+| Restrição de capacidade | *capacity constraint* | o limite de quantos clientes a equipe consegue acionar por mês; com ele, a pergunta vira "quem acionar primeiro?" | 12 |
+| Análise de sensibilidade | *sensitivity analysis* | refazer a conta trocando uma premissa de cada vez, para ver se a conclusão muda quando ela está errada | 12 |
+| Robustez | *robustness check* | conferir se uma conclusão se mantém quando se muda um detalhe do método | 12 |

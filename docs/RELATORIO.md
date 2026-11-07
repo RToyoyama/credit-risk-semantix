@@ -338,7 +338,48 @@ A decisão por custo multiplica a probabilidade pela dívida, então a probabili
 
 O modelo sem correção é levemente "comprimido" nas pontas (prevê 5,8% na faixa de menor risco, cuja taxa real é 3,5%; e 67,7% na de maior risco, real 71,3%), mas entre 10% e 30%, onde a decisão de agir acontece, o erro é ≤ 0,8 p.p. A isotônica corrige as pontas, mas piora o PR AUC em 60% das rodadas. **Decisão: sem correção**, pelo critério fixado. A Parte B confere, como robustez, se a isotônica mudaria o resultado financeiro.
 
-> TODO (Etapas 12B–17).
+### 3.10 Política de decisão por custo (Etapa 12, Parte B)
+
+**Premissas de negócio** (`config.py`; aceitas antes de rodar e testadas na sensibilidade):
+
+| Premissa | Valor | Justificativa |
+|---|---|---|
+| LGD (fração da dívida perdida no calote) | 60% | cartão de crédito não tem garantia; referências de mercado e regulatórias ficam entre 45% e 75% |
+| EAD (exposição no calote) | fatura de setembro (negativa → 0) | é o que está em aberto na data da decisão |
+| Eficácia da ação | 30% | uma ação preventiva reduz parte da perda, não toda |
+| Custo da ação | NT$ 100 | custo operacional de um contato |
+| Atrito | NT$ 300 | margem perdida ao incomodar um bom pagador |
+
+Para cada cliente, o **valor de agir** é `LGD × EAD × eficácia − custo` se ele daria calote, e `−custo − atrito` se pagaria. Com a PD do modelo, o **valor esperado** é `PD × LGD × EAD × eficácia − custo − (1 − PD) × atrito`. Exemplo: fatura de NT$ 10.000 → agir compensa se PD > 19%; com fatura de NT$ 2.000, só acima de 62%. Tudo é calculado nas previsões out-of-fold do treino; o holdout confirma na Etapa 13.
+
+**Sem limite de capacidade** (perda total sem ação no treino: NT$ 152,8 mi):
+
+| Comparação | Diferença | IC 95% (bootstrap) |
+|---|---|---|
+| Regra por cliente (valor esperado > 0) − não agir | **+NT$ 40,4 mi** | 38,3 a 42,7 mi |
+| Regra por cliente − melhor regra fixa ("≥ 1 mês com atraso") | **+NT$ 13,4 mi** | 11,9 a 14,8 mi |
+
+O critério de sucesso (Seção 1.5) está cumprido no treino. **Porém**, com estas premissas, acionar um caloteiro típico evita ≈ NT$ 3.600 e acionar um bom pagador custa NT$ 400, então a política aciona **59% da carteira** e o "melhor limiar único" degenera para 0,01. Como nenhuma operação aciona 60% dos clientes por mês, a política foi revista **depois de ver este resultado** (decisão registrada): premissas mantidas, com uma **restrição de capacidade de 10%** da carteira por mês. A calibração isotônica mudaria o valor em só 0,09%, o que confirma a escolha da Seção 3.9.
+
+**Com capacidade de 10%: quem acionar?** Critério: o valor esperado precisa vencer a regra de atraso com IC 95% acima de zero.
+
+| Política (2.400 clientes) | Calotes alcançados | Valor |
+|---|---|---|
+| **Maior valor esperado** (PD × exposição) | 1.142 (21,5%) | **NT$ 26,6 mi** |
+| Maior PD | 1.711 (32,2%) | NT$ 18,1 mi |
+| Regra de atraso (sem modelo; desempata pela maior fatura) | 1.701 (32,0%) | NT$ 19,0 mi |
+
+![Política com capacidade](../reports/figures/decision_01_capacidade.png)
+
+- **Valor esperado − regra de atraso: +NT$ 7,7 mi** (IC 6,3 a 9,1 mi); +10,1 mi com capacidade de 5% e +10,2 mi com 20%.
+- **Contraintuitivo:** ordenar só pela PD **perde** da regra de atraso (−NT$ 0,9 mi; IC −1,4 a −0,4 mi). A regra desempata pela maior fatura, ou seja, já considera o valor em jogo. **Um bom modelo de risco sozinho não basta; o valor vem de combinar a probabilidade com a exposição.**
+- **Sensibilidade:** o modelo vence a regra em todos os 12 cenários (+NT$ 3,7 mi a +15,5 mi). A eficácia da ação é a premissa que mais pesa. A política evita 17,4% da perda total da carteira.
+
+![Sensibilidade](../reports/figures/decision_02_sensibilidade.png)
+
+**Política oficial:** acionar, por mês, os **10% de clientes com maior valor esperado de ação** (`config.CAPACITY`).
+
+> TODO (Etapas 13–17).
 
 ## 4. Conclusões
 

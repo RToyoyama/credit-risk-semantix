@@ -170,3 +170,20 @@ FINAL_MODEL = "xgboost"  # Etapa 11: líder após o tuning; nenhum ensemble pass
 CALIBRATION_METHOD = (
     "none"  # Etapa 12A: sigmoid piora o Brier; isotônica piora o PR AUC (win rate 40%)
 )
+
+# ── Premissas de negócio (Etapa 12B; aceitas em 2026-11-07, com sensibilidade) ──
+LGD = 0.60  # fração da dívida perdida no calote (cartão sem garantia: 45%–75%)
+ACTION_EFFICACY = 0.30  # fração da perda que a ação preventiva evita num caloteiro
+ACTION_COST = 100.0  # NT$ por cliente acionado (contato, análise)
+FRICTION_COST = 300.0  # NT$ de margem perdida ao acionar um bom pagador
+SENSITIVITY: dict[str, list[float]] = {
+    "lgd": [0.45, 0.60, 0.75],
+    "efficacy": [0.15, 0.30, 0.60],
+    "action_cost": [50.0, 100.0, 200.0],
+    "friction_cost": [150.0, 300.0, 600.0],
+}
+OOF_PREDICTIONS = PROCESSED_DIR / "oof_predictions.parquet"
+# Restrição operacional (Etapa 12B, decidida após ver que a política sem limite
+# aciona ~60% da carteira): a equipe aciona no máximo esta fração por mês.
+CAPACITY = 0.10
+CAPACITY_SENSITIVITY = [0.05, 0.10, 0.20]
