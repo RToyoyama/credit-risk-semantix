@@ -84,6 +84,7 @@ A análise exploratória (Etapa 5) usou **só os dados de treino** e testou cada
 | **XGBoost e Random Forest empatam na frente** (Etapa 9): PR AUC 0,563 e 0,562, contra 0,22 de quem não sabe nada. A acurácia dos quatro modelos testados fica entre 81,8% e 82,2% e não serve para escolher | os dois seguem para o ajuste fino |
 | **Depois do ajuste fino, o XGBoost lidera sozinho** (Etapa 11): PR AUC 0,566. O ajuste rendeu pouco nos modelos fortes (+0,003) | XGBoost ajustado é o modelo de referência |
 | **Em dinheiro, o modelo vence a regra de atraso** (Etapa 12): acionando 10% da carteira por mês, escolher pelo valor esperado (chance de calote × dívida) gera **NT$ 26,7 milhões**, contra NT$ 19,0 milhões da regra "mais atrasados primeiro" (+41%; IC 95% da diferença: +6,3 a +9,2 mi). O modelo vence em todos os 12 cenários de premissas testados | política oficial: acionar os 10% de maior valor esperado |
+| **A perda esperada acerta o tamanho da perda** (Etapa 14): previu NT$ 39,4 mi de perda no holdout, contra NT$ 40,4 mi reais (−2,3%). Os 10% de clientes com maior perda esperada concentram 63% de toda a perda | base para provisionar e para priorizar ações |
 | **Um bom modelo de risco sozinho não basta**: escolher só pela probabilidade de calote **perde** da regra de atraso. O ganho vem de combinar a probabilidade com o valor em jogo | base para a perda esperada e o score (Etapa 14) |
 | **Confirmado na prova lacrada** (Etapa 13): em 6.000 clientes nunca vistos, o desempenho ficou dentro do previsto pela validação cruzada (PR AUC 0,560) e a política gerou **+NT$ 2,36 milhões a mais que a regra de atraso** (+46%; IC 95%: +1,59 a +3,15 mi), evitando 18,6% da perda | o resultado não depende de sorte no treino |
 | **Sem viés detectado por sexo ou idade**: a probabilidade prevista erra no máximo 2,0 p.p. em qualquer grupo | auditoria de equidade aprovada |
@@ -105,7 +106,7 @@ Detalhes: notebooks de [EDA](notebooks/01_eda_inferencia.ipynb) e de [segmentaç
 | **Critérios definidos antes dos experimentos** | evita ajustar a régua depois de ver o resultado |
 | **Dados verificados na entrada:** download direto da fonte oficial, com conferência da "impressão digital" do arquivo (SHA-256) e validação de colunas, tipos e faixas | se a fonte mudar, o processo para em vez de seguir com dados diferentes |
 | **Uma única fonte de verdade para as regras de negócio** | API, dashboard e avaliação usam o mesmo código de scoring (a partir da Etapa 14) |
-| **Testes automatizados** e verificação de código a cada commit | hoje: 150 testes |
+| **Testes automatizados** e verificação de código a cada commit | hoje: 154 testes |
 
 **Decisão consciente:** a base tem 30 mil linhas e cabe na memória de qualquer computador. Por isso o projeto usa pandas e scikit-learn, e não ferramentas de big data (Spark, dbt, Airflow), que só aumentariam a complexidade sem nenhum ganho.
 
@@ -189,6 +190,7 @@ credit-risk-semantix/
 │   ├── tuning.py          # busca de hiperparâmetros com semente separada
 │   ├── decision.py        # calibração e política de decisão por custo
 │   ├── final.py           # treino final e avaliação única no holdout
+│   ├── expected_loss.py   # perda esperada por cliente e carteira
 │   ├── evaluate.py        # validação cruzada, KS, calibração e comparação pareada
 │   ├── explain.py         # VIF e razões de chances
 │   ├── experiments.py     # experimentos pareados (resultados em reports/)

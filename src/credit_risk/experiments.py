@@ -561,6 +561,53 @@ def sensitive_experiment() -> pd.DataFrame:
     return out
 
 
+def expected_loss_experiment() -> pd.DataFrame:
+    """Etapa 14A: EL da carteira, ranking por EL × por PD e concentração da perda.
+
+    Usa as previsões OOF do treino (``decision_experiment``) e confirma com as
+    previsões já salvas do holdout (``make final``), sem reavaliá-lo.
+
+    Returns:
+        Resumo por base (treino OOF e holdout).
+    """
+    from credit_risk.expected_loss import concentration_curve, expected_loss, ranking_comparison
+
+    bases = {
+        "treino (OOF)": pd.read_parquet(config.OOF_PREDICTIONS),
+        "holdout": pd.read_parquet(config.HOLDOUT_PREDICTIONS),
+    }
+    rows, curves = [], []
+    for name, b in bases.items():
+        y, ead, p = b[config.TARGET].to_numpy(), b["ead"].to_numpy(), b["pd"].to_numpy()
+        el = expected_loss(p, ead)
+        realized = config.LGD * ead * (y == 1)
+        rows.append(
+            {
+                "base": name,
+                "clientes": len(b),
+                "ead_total": ead.sum(),
+                "el_total": el.sum(),
+                "perda_realizada": realized.sum(),
+                "el_sobre_ead": el.sum() / ead.sum(),
+                **ranking_comparison(p, ead, y),
+            }
+        )
+        for crit, order in [("EL", el), ("PD", p)]:
+            curves.append(concentration_curve(realized, order).assign(base=name, ordenacao=crit))
+    summary = pd.DataFrame(rows)
+    summary.to_csv(config.REPORTS_DIR / "expected_loss_summary.csv", index=False)
+    pd.concat(curves, ignore_index=True).to_csv(
+        config.REPORTS_DIR / "expected_loss_concentration.csv", index=False
+    )
+    oof = bases["treino (OOF)"]
+    sens = [
+        {"lgd": lgd, "el_total": expected_loss(oof["pd"], oof["ead"], lgd).sum()}
+        for lgd in config.SENSITIVITY["lgd"]
+    ]
+    pd.DataFrame(sens).to_csv(config.REPORTS_DIR / "expected_loss_lgd_sensitivity.csv", index=False)
+    return summary
+
+
 EXPERIMENTS = {
     "feature_experiment": feature_experiment,
     "status_category_experiment": status_category_experiment,
@@ -573,6 +620,7 @@ EXPERIMENTS = {
     "decision_experiment": decision_experiment,
     "capacity_experiment": capacity_experiment,
     "sensitive_experiment": sensitive_experiment,
+    "expected_loss_experiment": expected_loss_experiment,
 }
 
 

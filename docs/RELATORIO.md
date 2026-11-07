@@ -436,7 +436,23 @@ A diferença de acionamento entre os sexos acompanha a taxa real de calote. **Li
 
 **Por segmento:** o modelo ordena pior **dentro** do atraso crônico (ROC AUC 0,68 contra 0,73–0,74 nos demais) e subestima o risco desse grupo em 3,8 p.p.
 
-> TODO (Etapas 14–17).
+### 3.13 Perda esperada (Etapa 14, Parte A)
+
+**EL = PD × LGD × EAD** por cliente (`expected_loss.py`), calculada nas previsões OOF do treino e confirmada nas previsões já salvas do holdout.
+
+| Base | EL prevista | Perda real | Diferença | Top 10% por **EL** captura | Top 10% por **PD** captura |
+|---|---|---|---|---|---|
+| Treino (OOF) | NT$ 150,4 mi | NT$ 152,8 mi | −1,6% | **59,6%** da perda | 40,1% |
+| Holdout | NT$ 39,4 mi | NT$ 40,4 mi | −2,3% | **63,2%** da perda | 42,3% |
+
+![Concentração da perda](../reports/figures/el_01_concentracao.png)
+
+- A EL prevê a perda total da carteira com erro de cerca de 2%, base para **provisionar**.
+- **52% do top 10% muda** quando se troca a PD pela EL (1.253 de 2.400 clientes no treino).
+- Os 5% de maior EL concentram 43% da perda real; os 20% de maior EL, 77%.
+- Sensibilidade: EL total de NT$ 112,8 / 150,4 / 188,0 mi com LGD de 45% / 60% / 75% (a ordem dos clientes não muda).
+
+> TODO (Etapas 14B–17).
 
 ## 4. Conclusões
 

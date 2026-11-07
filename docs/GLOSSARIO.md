@@ -118,3 +118,5 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | Dependência parcial | *partial dependence plot (PDP)* | mudar uma variável para o mesmo valor em todos os clientes e ver a PD média; mostra o "formato" do efeito | 13 |
 | Matriz de confusão | *confusion matrix* | tabela que cruza a decisão (acionado ou não) com o que aconteceu (calote ou não) | 13 |
 | Variável proxy | *proxy variable* | uma variável que, sem ser sensível, anda junto com um atributo sensível e pode reproduzir uma discriminação de forma indireta | 13 |
+| Provisão | *loan loss provision* | dinheiro que o banco reserva para cobrir as perdas que espera ter com calotes | 14 |
+| Curva de concentração | *concentration / gains curve* | mostra que fração da perda é coberta olhando só os x% clientes mais prioritários | 14 |
