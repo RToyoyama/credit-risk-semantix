@@ -142,3 +142,11 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | Dashboard | *dashboard* | painel interativo que mostra os resultados com gráficos e controles, para quem decide explorar cenários sem programar | 18 |
 | Streamlit | *Streamlit* | biblioteca Python que transforma um script em um site interativo | 18 |
 | Cache | *cache* | guardar um resultado já calculado para não refazer a conta a cada clique (aqui, o modelo e os dados) | 18 |
+| Docker | *Docker* | ferramenta que empacota o projeto inteiro (Python, bibliotecas, código) numa "caixa" que roda igual em qualquer computador | 19 |
+| Imagem e container | *image / container* | a imagem é a "receita congelada" da caixa; o container é a caixa em execução | 19 |
+| Volume | *volume* | uma pasta guardada fora do container, que sobrevive quando ele é desligado (aqui, dados e modelo) | 19 |
+| Healthcheck | *healthcheck* | pergunta periódica do Docker ao serviço: "você está vivo?" | 19 |
+| Usuário não-root | *non-root user* | rodar o container sem privilégios de administrador, o que limita o estrago se algo der errado | 19 |
+| Integração contínua (CI) | *continuous integration* | um robô que roda os testes automaticamente a cada mudança enviada ao GitHub | 19 |
+| GitHub Actions | *GitHub Actions* | o serviço do GitHub que executa esses robôs (workflows) | 19 |
+| Cron | *cron schedule* | o jeito de agendar uma tarefa para se repetir (ex.: todo dia 1º do mês às 9h) | 19 |

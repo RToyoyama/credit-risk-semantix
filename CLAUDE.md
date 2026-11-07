@@ -123,7 +123,7 @@ Sempre: `git add -A && pre-commit run --all-files; git add -A` antes do commit (
 ## 3. STACK E PADRÕES
 ═══════════════════════════════════════
 
-- **Python 3.11** (via `uv`), pandas, numpy, scikit-learn, xgboost, imbalanced-learn, scipy, statsmodels, matplotlib, seaborn, plotly, streamlit, joblib, shap, fastapi, uvicorn, pydantic (v2), python-calamine (ler o `.xls` da UCI; `xlrd` está depreciado no pandas 3.1).
+- **Python 3.11** (via `uv`), pandas, numpy, scikit-learn, xgboost-cpu (Etapa 19: mesmo algoritmo, sem GPU, imagem 42% menor), imbalanced-learn, scipy, statsmodels, matplotlib, seaborn, plotly, streamlit, joblib, shap, fastapi, uvicorn, pydantic (v2), python-calamine (ler o `.xls` da UCI; `xlrd` está depreciado no pandas 3.1).
 - Dev: ruff, pytest, pre-commit, ipykernel, httpx2 (para o `TestClient` do FastAPI; o Starlette depreciou o `httpx` nesse uso), nbformat e nbclient (execução headless dos notebooks).
 - `snake_case`, **type hints obrigatórios**, docstrings no **padrão Google**.
 - Arquitetura de dados em camadas: `raw → interim (limpo) → processed (features)`, mais `reports/` para resultados.
@@ -168,7 +168,7 @@ Previna estes problemas, que já aconteceram comigo:
 | `train_score` inflado quando há encoders que usam o alvo | Documentar; não usar gap de overfitting como medida absoluta |
 | `fit_time` em CSV versionado gera diff falso a cada execução | Salvar tempos em arquivo separado, fora do Git |
 | Docker no WSL: comando não encontrado | Ativar *Settings → Resources → WSL Integration* |
-| `nvidia-nccl-cu12` não existe em ARM | Documentar `--platform linux/amd64` para Mac Apple Silicon |
+| `nvidia-nccl-cu12` não existe em ARM | Resolvido na Etapa 19: o projeto usa `xgboost-cpu`, que não depende dele |
 | Commit B "vazio" porque o notebook não estava salvo | Conferir `git status` antes de commitar |
 
 ═══════════════════════════════════════

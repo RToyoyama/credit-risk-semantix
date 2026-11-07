@@ -1,0 +1,39 @@
+name: Monitoramento mensal
+
+# Rotina de monitoramento (Etapa 16): todo dia 1º, às 09:00 UTC, reconstrói os
+# artefatos a partir da UCI, roda o PSI e os indicadores e publica o relatório.
+# Em produção, o lote do mês substituiria os cenários de demonstração.
+on:
+  schedule:
+    - cron: "0 9 1 * *"
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instala o uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.13.6"
+
+      - name: Ambiente
+        run: |
+          uv venv --python 3.11 .venv
+          uv pip sync --python .venv/bin/python requirements.lock
+          uv pip install --python .venv/bin/python -e . --no-deps
+
+      - name: Reconstrói dados e modelo
+        run: .venv/bin/python -c "from credit_risk.artifacts import ensure_artifacts; ensure_artifacts()"
+
+      - name: Monitoramento (PSI + indicadores)
+        run: .venv/bin/python -m credit_risk.monitoring
+
+      - name: Publica o relatório
+        uses: actions/upload-artifact@v4
+        with:
+          name: monitoring-${{ github.run_id }}
+          path: reports/monitoring.json
+          retention-days: 90

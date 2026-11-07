@@ -1,0 +1,41 @@
+# Sobe a API (http://localhost:8000/docs) e o dashboard (http://localhost:8501).
+# Na primeira vez, a API baixa os dados da UCI e treina o modelo (cerca de
+# 1 minuto); o dashboard espera a API ficar saudável e usa os mesmos artefatos.
+services:
+  api:
+    build: .
+    image: credit-risk-semantix:latest
+    command: ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+    volumes:
+      - artifacts-data:/app/data
+      - artifacts-models:/app/models
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 180s
+
+  dashboard:
+    image: credit-risk-semantix:latest
+    command: ["streamlit", "run", "app/dashboard.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+    ports:
+      - "8501:8501"
+    volumes:
+      - artifacts-data:/app/data
+      - artifacts-models:/app/models
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8501/_stcore/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  artifacts-data:
+  artifacts-models:

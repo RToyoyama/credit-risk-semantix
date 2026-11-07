@@ -162,9 +162,7 @@ numpy==2.4.6
     #   shap
     #   statsmodels
     #   streamlit
-    #   xgboost
-nvidia-nccl-cu12==2.32.3
-    # via xgboost
+    #   xgboost-cpu
 opentelemetry-api==1.45.2
     # via fastapi
 packaging==26.3
@@ -279,7 +277,7 @@ scipy==1.17.1
     #   scikit-learn
     #   shap
     #   statsmodels
-    #   xgboost
+    #   xgboost-cpu
 seaborn==0.13.2
     # via credit-risk (pyproject.toml)
 shap==0.51.0
@@ -360,5 +358,5 @@ websockets==17.4
     # via streamlit
 wrapt==2.5.2
     # via formulaic
-xgboost==3.2.0
+xgboost-cpu==3.2.0
     # via credit-risk (pyproject.toml)

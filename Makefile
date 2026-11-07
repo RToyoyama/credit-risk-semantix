@@ -2,7 +2,7 @@
 PY := .venv/bin/python
 BIN := .venv/bin
 
-.PHONY: help venv install lock data split experiments tune final monitor api app lint format test check hooks clean
+.PHONY: help venv install lock data split experiments tune final monitor api app docker-build docker-test docker-reproduce up down lint format test check hooks clean
 
 help: ## Lista os comandos disponíveis
 	@grep -E '^[a-z_-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
@@ -42,6 +42,21 @@ api: ## Sobe a API de scoring em http://localhost:8000 (docs em /docs)
 
 app: ## Sobe o dashboard em http://localhost:8501
 	$(BIN)/streamlit run app/dashboard.py --server.port 8501
+
+docker-build: ## Constrói a imagem Docker
+	docker compose build
+
+docker-test: ## Roda lint e testes dentro do container
+	docker compose run --rm --no-deps api sh -c "ruff check . && pytest"
+
+docker-reproduce: ## Reconstrói tudo no container e confere as métricas do holdout salvas
+	docker compose run --rm --no-deps api python -m credit_risk.reproduce
+
+up: ## Sobe API (8000) e dashboard (8501) com Docker
+	docker compose up -d
+
+down: ## Derruba os containers (mantém os volumes de dados e modelo)
+	docker compose down
 
 lint: ## Verifica o código com ruff (sem alterar)
 	$(BIN)/ruff check .

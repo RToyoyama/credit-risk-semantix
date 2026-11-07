@@ -19,7 +19,7 @@ dependencies = [
     "python-calamine>=0.3",
     # modelagem
     "scikit-learn>=1.5",
-    "xgboost>=2.1",
+    "xgboost-cpu>=2.1",  # mesmo algoritmo, sem suporte a GPU (~700 MB a menos)
     "imbalanced-learn>=0.12",
     "shap>=0.46",
     "joblib>=1.4",

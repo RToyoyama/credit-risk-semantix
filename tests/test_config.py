@@ -20,6 +20,7 @@ def test_root_env_variable_wins(tmp_path, monkeypatch):
 
 def test_root_falls_back_to_cwd_when_installed_as_copy(tmp_path, monkeypatch):
     fake = tmp_path / "site-packages" / "credit_risk" / "config.py"
+    monkeypatch.delenv("CREDIT_RISK_ROOT", raising=False)
     monkeypatch.setattr(config, "__file__", str(fake))
     monkeypatch.chdir(tmp_path)
     assert config._find_root() == Path(tmp_path).resolve()

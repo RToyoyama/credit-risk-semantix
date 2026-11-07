@@ -11,12 +11,12 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
 
-import joblib
 import pandas as pd
 from fastapi import FastAPI, Request
 
 from api.schemas import BatchIn, BatchOut, ClientIn, ModelInfo, ScoreOut
-from credit_risk import config
+from credit_risk import __version__, config
+from credit_risk.artifacts import ensure_artifacts
 from credit_risk.reasons import ReasonExplainer
 from credit_risk.scoring import ScoringParams, load_params, score_clients
 
@@ -24,9 +24,10 @@ API_VERSION = "1.0"
 
 
 def _load_artifacts() -> dict[str, Any]:
-    """Carrega o modelo, os cortes do scoring e os metadados salvos."""
-    model = joblib.load(config.FINAL_MODEL_PATH)
+    """Carrega o modelo (reconstruindo dados e modelo se faltarem), os cortes e os metadados."""
+    model = ensure_artifacts().model
     meta = json.loads(config.MODEL_METADATA.read_text()) if config.MODEL_METADATA.exists() else {}
+    meta.setdefault("versao", __version__)
     return {"model": model, "params": load_params(), "metadata": meta}
 
 

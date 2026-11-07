@@ -549,7 +549,22 @@ O dashboard (Streamlit) conta a história do projeto para o gestor e permite **e
 
 **Revisão visual:** cada página foi capturada (Chromium headless) e revisada. As capturas pegaram erros que os testes automáticos não pegariam, entre eles um **ponto de equilíbrio calculado errado** (20% em vez de 19%), agora coberto por um teste.
 
-> TODO (Etapas 19+).
+### 3.19 Docker e integração contínua (Etapa 19)
+
+**Docker:** uma única imagem (`python:3.11-slim`, usuário sem privilégios, instalação pelo lock, `libgomp1` para o XGBoost) serve a API e o dashboard. Dados e modelo não entram na imagem: na primeira execução, a API os reconstrói a partir da UCI e os guarda num volume compartilhado; o dashboard só sobe depois que a API está saudável (*healthcheck*).
+
+| Validação | Resultado |
+|---|---|
+| Lint e testes dentro do container | 215 passando |
+| `make docker-reproduce`: reconstruir tudo do zero e comparar as métricas do holdout com as salvas | **diferença 0,0** nas 4 métricas |
+| `make up`: API e dashboard saudáveis; `/score` com o mesmo resultado do ambiente local; 7 páginas sem erro | ✅ |
+| Processos rodando como usuário sem privilégios | `appuser` |
+
+**Tamanho da imagem:** a primeira versão tinha 2,84 GB, dos quais cerca de 700 MB eram suporte a GPU que o projeto não usa. Com `xgboost-cpu` (mesmo algoritmo), caiu para **1,65 GB**, com métricas idênticas.
+
+**Integração contínua (GitHub Actions):** a cada push, lint + testes (inclusive os da API, com um modelo treinado no próprio teste) e construção da imagem com os testes rodando dentro dela. Um segundo workflow, **agendado para todo dia 1º do mês**, reconstrói os artefatos, roda o monitoramento (Etapa 16) e publica o `monitoring.json`, a rotina mensal sem precisar de Airflow.
+
+> TODO (Etapa 20).
 
 ## 4. Conclusões
 
