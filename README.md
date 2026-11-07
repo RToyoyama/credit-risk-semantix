@@ -82,6 +82,7 @@ A análise exploratória (Etapa 5) usou **só os dados de treino** e testou cada
 | **Três tipos de cliente** (Etapa 6, formados sem saber quem deu calote): **quitadores** (43%, 16,7% de calote), **rotativo em dia** (47%, 18,8%) e **atraso crônico** (10%, **62,4%**) | o risco vem do **atraso**, não do uso do rotativo: tratar o rotativo como risco cortaria receita sem reduzir perda |
 | **Os grupos não ajudam o modelo a prever** (ganho nulo nos dois modelos testados) | resultado negativo documentado: os grupos servem para **explicar** a carteira, não para prever |
 | **XGBoost e Random Forest empatam na frente** (Etapa 9): PR AUC 0,563 e 0,562, contra 0,22 de quem não sabe nada. A acurácia dos quatro modelos testados fica entre 81,8% e 82,2% e não serve para escolher | os dois seguem para o ajuste fino |
+| **Depois do ajuste fino, o XGBoost lidera sozinho** (Etapa 11): PR AUC 0,566. O ajuste rendeu pouco nos modelos fortes (+0,003) | XGBoost ajustado é o modelo de referência |
 | **"Balancear" as classes atrapalha** (Etapa 10): não melhora a detecção e faz o modelo prever, em média, 41% de chance de calote quando a taxa real é 22% | as probabilidades ficam confiáveis, o que é essencial para calcular a perda em dinheiro |
 | **Um mês de atraso recente dobra a chance de calote** (razão de chances 1,99); dobrar o limite reduz a chance em cerca de 16% | base para explicar cada decisão ao cliente |
 | **Resumir o histórico ajuda** (Etapa 7): "meses com atraso" é a variável mais forte do projeto; com 13 variáveis de resumo, a regressão logística melhorou em todas as 15 rodadas de teste | as variáveis de resumo entram no modelo |
@@ -98,7 +99,7 @@ Detalhes: notebooks de [EDA](notebooks/01_eda_inferencia.ipynb) e de [segmentaç
 | **Critérios definidos antes dos experimentos** | evita ajustar a régua depois de ver o resultado |
 | **Dados verificados na entrada:** download direto da fonte oficial, com conferência da "impressão digital" do arquivo (SHA-256) e validação de colunas, tipos e faixas | se a fonte mudar, o processo para em vez de seguir com dados diferentes |
 | **Uma única fonte de verdade para as regras de negócio** | API, dashboard e avaliação usam o mesmo código de scoring (a partir da Etapa 14) |
-| **Testes automatizados** e verificação de código a cada commit | hoje: 121 testes |
+| **Testes automatizados** e verificação de código a cada commit | hoje: 127 testes |
 
 **Decisão consciente:** a base tem 30 mil linhas e cabe na memória de qualquer computador. Por isso o projeto usa pandas e scikit-learn, e não ferramentas de big data (Spark, dbt, Airflow), que só aumentariam a complexidade sem nenhum ganho.
 
@@ -140,6 +141,7 @@ make install   # instala as versões exatas do requirements.lock
 make data      # baixa os dados da UCI, confere o SHA-256 e valida
 make split     # limpa os dados e separa treino / holdout
 make experiments  # roda os experimentos e salva os resultados em reports/
+make tune      # ajuste de hiperparâmetros (~10 min)
 make test      # roda os testes
 ```
 
@@ -177,6 +179,7 @@ credit-risk-semantix/
 │   ├── preprocessing.py   # escala e one-hot dentro do pipeline
 │   ├── models.py          # catálogo de modelos e pipeline completo
 │   ├── balancing.py       # nenhum × pesos por classe × SMOTE
+│   ├── tuning.py          # busca de hiperparâmetros com semente separada
 │   ├── evaluate.py        # validação cruzada, KS, calibração e comparação pareada
 │   ├── explain.py         # VIF e razões de chances
 │   ├── experiments.py     # experimentos pareados (resultados em reports/)

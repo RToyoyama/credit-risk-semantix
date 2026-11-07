@@ -289,7 +289,24 @@ Com 22% de inadimplentes, é comum "balancear" o treino: dar peso maior aos inad
 
 **Decisão:** sem balanceamento (`config.BALANCING_STRATEGY = "none"`). Para achar mais inadimplentes, o caminho é **mover o limiar de decisão** com probabilidades confiáveis (Etapa 12), e não distorcer o treino. A hipótese registrada antes se confirmou.
 
-> TODO (Etapas 11–17).
+### 3.7 Ajuste de hiperparâmetros (Etapa 11, Parte A)
+
+Busca com **Grid** (logística: 7 valores de `C`; árvore: 24 combinações) e **Randomized** (Random Forest: 40; XGBoost: 60), otimizando PR AUC em folds sorteados com uma **semente separada** (2024). A versão escolhida é reavaliada nos folds padrão (semente 42), que a busca nunca viu. A diferença entre as duas notas mede o **otimismo da busca**. Critério: adotar se o PR AUC subir com win rate > 60% e o Brier não piorar.
+
+| Modelo | PR AUC padrão → ajustado | Ganho | Win rate | Otimismo da busca | Decisão |
+|---|---|---|---|---|---|
+| XGBoost | 0,5626 → **0,5657** | +0,003 | 73% | +0,0005 | adotar |
+| Random Forest | 0,5623 → **0,5642** | +0,002 | 67% | +0,0010 | adotar |
+| Árvore de Decisão | 0,5256 → **0,5376** | +0,012 | 100% | +0,0034 | adotar |
+| Regressão logística | 0,5476 → 0,5476 | 0 | — | −0,0007 | manter (a busca escolheu `C = 1`, o padrão) |
+
+- O tuning ajuda pouco nos modelos fortes (≈ +0,003) e mais na árvore, o modelo mais sensível à configuração.
+- O otimismo é pequeno nestes dados (≤ 0,0034). Na logística ele sai negativo: com só 7 candidatos, a "sorte" da escolha quase não atua.
+- **Depois do tuning, o empate da Etapa 9 se desfaz:** a Random Forest ajustada vence o XGBoost ajustado em só 33% das rodadas de PR AUC e em 1 de 15 de ROC AUC. **O XGBoost ajustado é o líder isolado.**
+
+Hiperparâmetros adotados: [`reports/best_params.json`](../reports/best_params.json).
+
+> TODO (Etapas 11B–17).
 
 ## 4. Conclusões
 

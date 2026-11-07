@@ -92,3 +92,9 @@ Termos técnicos do projeto explicados em linguagem simples. Cada termo indica a
 | Calibração | *calibration* | quando as probabilidades "falam a verdade": entre os clientes que receberam 30%, cerca de 30% dão calote | 10 |
 | Curva de confiabilidade | *reliability curve / calibration curve* | gráfico da probabilidade prevista contra a taxa real, por faixas. Num modelo calibrado, os pontos ficam sobre a diagonal | 10 |
 | Previsão fora do fold (OOF) | *out-of-fold prediction* | a previsão de cada cliente feita por um modelo que **não** o viu no treino. Permite avaliar o treino inteiro sem tocar no holdout | 10 |
+| Ajuste de hiperparâmetros | *hyperparameter tuning* | testar várias configurações do modelo e ficar com a que dá a melhor nota na validação cruzada | 11 |
+| Busca em grade | *grid search* | testar **todas** as combinações de uma lista de valores. Bom quando há poucos hiperparâmetros | 11 |
+| Busca aleatória | *randomized search* | sortear combinações num espaço amplo. Com muitos hiperparâmetros, acha soluções tão boas quanto a grade, em bem menos tempo | 11 |
+| Otimismo da busca | *selection bias / optimistic bias* | a nota do melhor candidato de uma busca é inflada pela sorte, como ficar com o maior de 60 dados. Mede-se reavaliando o escolhido em folds que a busca não viu | 11 |
+| Regularização | *regularization* | um "freio" que impede o modelo de dar pesos exagerados às variáveis. Na logística, `C` pequeno = freio forte | 11 |
+| Taxa de aprendizado | *learning rate* | no XGBoost, o tamanho do passo de cada nova árvore ao corrigir as anteriores. Passos menores pedem mais árvores, mas costumam generalizar melhor | 11 |

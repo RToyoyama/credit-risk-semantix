@@ -5,6 +5,7 @@ e ``pay_status`` como categoria; árvores com os números como estão.
 Hiperparâmetros aqui são padrões razoáveis, sem tuning (Etapa 11).
 """
 
+import json
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -18,6 +19,13 @@ from xgboost import XGBClassifier
 
 from credit_risk import config
 from credit_risk.preprocessing import make_feature_pipeline
+
+
+def _load_best_params() -> dict:
+    """Hiperparâmetros adotados no tuning (vazio se ainda não rodou)."""
+    if not config.BEST_PARAMS.exists():
+        return {}
+    return json.loads(config.BEST_PARAMS.read_text())
 
 
 @dataclass(frozen=True)
@@ -66,17 +74,24 @@ CATALOG: dict[str, ModelSpec] = {
 }
 
 
-def build_pipeline(name: str, model: BaseEstimator | None = None) -> Pipeline:
+def build_pipeline(name: str, model: BaseEstimator | None = None, tuned: bool = False) -> Pipeline:
     """Pipeline completo (features → pré-processamento → modelo) de um modelo do catálogo.
 
     Args:
         name: Chave em ``CATALOG``.
-        model: Estimador a usar no lugar do padrão (ex.: com hiperparâmetros ajustados).
+        model: Estimador a usar no lugar do padrão.
+        tuned: Usa os hiperparâmetros adotados na Etapa 11 (``best_params.json``),
+            se houver. O padrão é False para manter reproduzíveis os experimentos
+            das Etapas 9 e 10.
 
     Returns:
         Pipeline não ajustado.
     """
     spec = CATALOG[name]
+    if model is None and tuned:
+        params = _load_best_params().get(name)
+        if params:
+            model = spec.factory().set_params(**params)
     prep = make_feature_pipeline(
         scaled=spec.linear,
         status_as_category=spec.linear and config.STATUS_AS_CATEGORY_LINEAR,

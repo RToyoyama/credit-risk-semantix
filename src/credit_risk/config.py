@@ -161,3 +161,8 @@ INTERPRETABLE_FEATURES = [
 ]
 VIF_ALERT = 5.0
 BALANCING_STRATEGY = "none"  # Etapa 10: nenhuma técnica passou (Brier piora em 100% dos folds)
+
+# ── Tuning (Etapa 11) ───────────────────────────────────────
+SEARCH_SEED = 2024  # folds da busca ≠ folds da avaliação (seed 42)
+SEARCH_N_ITER = {"random_forest": 40, "xgboost": 60}
+BEST_PARAMS = REPORTS_DIR / "best_params.json"

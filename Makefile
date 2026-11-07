@@ -2,7 +2,7 @@
 PY := .venv/bin/python
 BIN := .venv/bin
 
-.PHONY: help venv install lock data split experiments lint format test check hooks clean
+.PHONY: help venv install lock data split experiments tune lint format test check hooks clean
 
 help: ## Lista os comandos disponíveis
 	@grep -E '^[a-z_-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
@@ -27,6 +27,9 @@ split: ## Limpa os dados (interim) e separa treino/holdout (processed)
 
 experiments: ## Roda os experimentos pareados e salva em reports/
 	$(PY) -m credit_risk.experiments
+
+tune: ## Ajusta hiperparâmetros (seed de busca separada) e salva best_params.json
+	$(PY) -m credit_risk.tuning
 
 lint: ## Verifica o código com ruff (sem alterar)
 	$(BIN)/ruff check .
